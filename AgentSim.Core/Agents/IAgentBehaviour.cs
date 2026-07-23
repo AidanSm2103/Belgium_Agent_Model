@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace AgentSim.Core.Agents
 {
-    internal class IAgentBehaviour
+    public interface IAgentBehaviour
     {
+        void Execute(Agent agent, World world, RandomProvider rng);
     }
 }
