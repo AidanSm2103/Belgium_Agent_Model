@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AgentSim.Core.Agents;
+
+// The simulation space. Owns the agent collection, the patch grid, and bounds/wrapping logic
 
 namespace AgentSim.Core.World
 {
@@ -14,6 +17,7 @@ namespace AgentSim.Core.World
         private readonly List<Agent> _agents = new();
         public IReadOnlyList<Agent> Agents => _agents;
 
+        // Optional patch grid — not required for the random-walk MVP, available for later features (patch coloring, agent-environment interaction).
         public Patch[,]? Patches { get; private set; }
 
         public World(double width, double height)
@@ -28,6 +32,7 @@ namespace AgentSim.Core.World
 
         public void Clear() => _agents.Clear();
 
+        // Builds a patch grid of the given resolution over the world's bounds. Call this from SimulationEngine.Setup() only if/when patches are needed
         public void InitializePatches(int columns, int rows)
         {
             Patches = new Patch[columns, rows];
@@ -43,6 +48,8 @@ namespace AgentSim.Core.World
             }
         }
 
+        // Wraps a position around world bounds (torus topology)
+        // Always route new agent positions through this so agents never leave the visible world
         public (double X, double Y) Wrap(double x, double y)
         {
             double wrappedX = ((x % Width) + Width) % Width;
