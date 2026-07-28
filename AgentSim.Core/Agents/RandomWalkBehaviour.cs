@@ -9,7 +9,7 @@ using AgentSim.Core.Worlds;
 namespace AgentSim.Core.Agents;
 
 // Hardcoded behavior for the MVP demo: turn by a small random amount each tick, then move forward.
-public class RandomWalkBehavior : IAgentBehaviour
+public class RandomWalkBehavior : IAgentBehavior
 {
     private readonly double _maxTurnDegrees;
     private readonly double _stepSize;
