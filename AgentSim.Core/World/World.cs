@@ -9,7 +9,7 @@ using AgentSim.Core.Agents;
 
 namespace AgentSim.Core.Worlds
 {
-    internal class World
+    public class World
     {
         public double Width { get; }
         public double Height { get; }
