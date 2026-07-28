@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Utilities;
-using AgentSim.Core.Worlds;
+using AgentSim.Core.World;
 
 namespace AgentSim.Core.Agents;
 
