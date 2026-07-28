@@ -37,7 +37,7 @@ namespace AgentSim.Core.Simulation
         //THis is called before the first Tick() and again any time the user wants to restart
         public void Setup()
         {
-            _rng = new RandomPRovider(Settings.Seed);
+            _rng = new RandomProvider(Settings.Seed);
             Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
             TickCount = 0;
 
