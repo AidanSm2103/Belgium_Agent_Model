@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 // Not required for the random-walk MVP — World works fine with Patches left Null
 // This exists so patch-based features (coloring, resource values, agent-environment interaction) can be added later without restructuring World or SimulationEngine
 
-namespace AgentSim.Core.World
+namespace AgentSim.Core.Worlds
 {
     public class Patch
     {
