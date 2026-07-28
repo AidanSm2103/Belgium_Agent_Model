@@ -13,7 +13,7 @@ using AgentSim.Core.Worlds;
 
 namespace AgentSim.Core.Agents
 {
-    public interface IAgentBehaviour
+    public interface IAgentBehavior
     {
         void Execute(Agent agent, World world, RandomProvider rng);
     }
