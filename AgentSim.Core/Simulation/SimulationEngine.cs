@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Utilities; 
 using AgentSim.Core.Worlds;
+using AgentSim.Core.Agents;
 
 //Description
 //This class owns the tick loop and the current state of the simulation
