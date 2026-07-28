@@ -7,7 +7,7 @@ using AgentSim.Core.Agents;
 
 // The simulation space. Owns the agent collection, the patch grid, and bounds/wrapping logic
 
-namespace AgentSim.Core.World
+namespace AgentSim.Core.Worlds
 {
     internal class World
     {
