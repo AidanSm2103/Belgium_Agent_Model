@@ -13,7 +13,7 @@ namespace AgentSim.Core.Simulation
 {
     public class SimulationEngine
     {
-        public World World {get; private set;}
+        public World Worlds {get; private set;}
         public SimulationSettings Settings { get;}
         public int TickCount{get; private set;}
         public bool IsRunning {get; private set;}
@@ -28,7 +28,7 @@ namespace AgentSim.Core.Simulation
         {
             Settings = settings;
             _rng = new RandomProvider(settings.Seed);
-            World = new World(settings.WorldWidth, settings.WorldHeight);
+            Worlds = new World(settings.WorldWidth, settings.WorldHeight);
         }
 
         //SETUP button in NetLogo
@@ -37,7 +37,7 @@ namespace AgentSim.Core.Simulation
         public void Setup()
         {
             _rng = new RandomPRovider(Settings.Seed);
-            World = new World(Settings.WorldWidth, Settings.WorldHeight);
+            Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
             TickCOunt = 0;
 
             for(int i=0; i<Settings.AgentCOunt; i++)
@@ -47,7 +47,7 @@ namespace AgentSim.Core.Simulation
                 double heading = _rng.NextDouble()*360;
 
                 var behavior = new RandomWalkBehavior(Settings.MaxTurnDegrees, Settings.StepSize);
-                World.AddAgent(new Agent(i, x, y, heading, behavior));
+                Worlds.AddAgent(new Agent(i, x, y, heading, behavior));
             }
         }
 
@@ -56,9 +56,9 @@ namespace AgentSim.Core.Simulation
         //The UI calls this on a timer for continuous running or only onxe per click for the Setup button from above
         public void Tick()
         {
-            foreach(var agent in World.Agents)
+            foreach(var agent in Worlds.Agents)
             {
-                agent.Step(World, _rng);
+                agent.Step(Worlds, _rng);
             }
 
             TickCount++;
