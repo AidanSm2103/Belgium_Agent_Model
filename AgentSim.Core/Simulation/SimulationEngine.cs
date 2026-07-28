@@ -39,9 +39,9 @@ namespace AgentSim.Core.Simulation
         {
             _rng = new RandomPRovider(Settings.Seed);
             Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
-            TickCOunt = 0;
+            TickCount = 0;
 
-            for(int i=0; i<Settings.AgentCOunt; i++)
+            for(int i=0; i<Settings.AgentCount; i++)
             {
                 double x = _rng.NextDouble()*Settings.WorldWidth;
                 double y = _rng.NextDouble()*Settings.WorldHeight;
