@@ -6,8 +6,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AgentSim.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Belgium Agent Model (BAM)" Height="600" Width="900">
     <Grid>
-        <views:WorldCanvasControl />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" Margin="15" Background="#F5F5F5">
+            <TextBlock Text="Simulation Controls" FontWeight="Bold" FontSize="16" Margin="0,0,0,15" />
+            
+            <Button Content="Setup" Command="{Binding Simulation.SetupCommand}" Margin="0,5" Padding="5"/>
+            <Button Content="Step" Command="{Binding Simulation.StepCommand}" Margin="0,5" Padding="5"/>
+            <Button Content="Go / Stop" Command="{Binding Simulation.GoCommand}" Margin="0,5" Padding="5"/>
+
+            <Separator Margin="0,15" />
+
+            <TextBlock Text="{Binding Simulation.AgentCount, StringFormat='Agent Count: {0}'}" />
+            <Slider Minimum="10" Maximum="1000" Value="{Binding Simulation.AgentCount}" TickFrequency="10" IsSnapToTickEnabled="True" Margin="0,5,0,15" />
+
+            <Separator Margin="0,15" />
+
+            <TextBlock Text="Monitors" FontWeight="Bold" Margin="0,0,0,10" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Ticks: " />
+                <TextBlock Text="{Binding Simulation.TickCount}" FontWeight="Bold" />
+            </StackPanel>
+        </StackPanel>
+
+        <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="15">
+            <views:WorldCanvasControl />
+        </Border>
     </Grid>
 </Window>
