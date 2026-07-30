@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace AgentSim.Wpf.ViewModels
 {
-    internal class MainViewModel
+    internal class MainViewModel : ViewModelBase
     {
+        public SimulationViewModel Simulation { get; }
+
+        public MainViewModel()
+        {
+            Simulation = new SimulationViewModel();
+        }
     }
 }
