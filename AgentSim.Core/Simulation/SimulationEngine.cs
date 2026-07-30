@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AgentSim.Core.Utilities; 
 using AgentSim.Core.Worlds;
 using AgentSim.Core.Agents;
+using System.Runtime.CompilerServices;
 
 //Description
 //This class owns the tick loop and the current state of the simulation
@@ -51,6 +52,7 @@ namespace AgentSim.Core.Simulation
                 var behavior = new RandomWalkBehavior(Settings.MaxTurnDegrees, Settings.StepSize);
                 Worlds.AddAgent(new Agent(i, x, y, heading, behavior));
             }
+            Ticked?.Invoke(this,EventArgs.Empty);
         }
 
         //GO button in NetLogo

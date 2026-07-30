@@ -17,10 +17,6 @@ using AgentSim.Core.Worlds;
 
 namespace AgentSim.Wpf.Views
 {
-    /// <summary>
-    /// Interaction logic for WorldCanvasControl.xaml
-    /// Responsible for rendering simulation world.
-    /// </summary>
     public partial class WorldCanvasControl : UserControl
     {
         private World? _lastWorld;
