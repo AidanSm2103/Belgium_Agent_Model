@@ -9,7 +9,7 @@ using System.Windows.Threading;
 
 namespace AgentSim.Wpf.ViewModels
 {
-    internal class SimulationViewModel : ViewModelBase
+    public class SimulationViewModel : ViewModelBase
     {
         private readonly DispatcherTimer _timer;
         private bool _isRunning;
