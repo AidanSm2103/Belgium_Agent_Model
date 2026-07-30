@@ -6,7 +6,11 @@
              xmlns:local="clr-namespace:AgentSim.Wpf.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+    <Grid Background="White">
+        <Canvas
+            x:Name="WorldCanvas"
+            Background="White"
+            HorizontalAlignment="Strtch"
+            VerticalAlignment="Stretch"/>
     </Grid>
 </UserControl>
