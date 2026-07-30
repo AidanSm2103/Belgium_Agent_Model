@@ -9,7 +9,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using AgentSim.Wpf.ViewModels;
 
 namespace AgentSim.Wpf.Views
 {
@@ -31,7 +30,7 @@ namespace AgentSim.Wpf.Views
             _viewModel.Simulation.Engine.Ticked += (s, e) =>
             {
                 Dispatcher.Invoke(() =>
-                    WorldCanvasCtrl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
+                    WorldCanvasControl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
             };
         }
     }
