@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using AgentSim.Wpf.ViewModels;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -14,9 +15,24 @@ namespace AgentSim.Wpf.Views
 {
     public partial class MainWindow : Window
     {
+        private readonly MainViewModel _viewModel;
+
         public MainWindow()
-        {            
-            this.DataContext = new MainViewModel();
+        {
+            InitializeComponent();
+
+            _viewModel = new MainViewModel();
+            DataContext = _viewModel;
+
+            // Whenever the engine ticks (or Setup() runs, per the change
+            // above), redraw the canvas. Wired here in code-behind rather
+            // than inside the ViewModel, since the ViewModel shouldn't
+            // reference WPF/View types directly.
+            _viewModel.Simulation.Engine.Ticked += (s, e) =>
+            {
+                Dispatcher.Invoke(() =>
+                    WorldCanvasCtrl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
+            };
         }
     }
 }
