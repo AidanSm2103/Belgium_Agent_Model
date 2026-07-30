@@ -23,9 +23,15 @@ namespace AgentSim.Wpf.Views
     /// </summary>
     public partial class WorldCanvasControl : UserControl
     {
+        private World? _lastWorld;
+
         public WorldCanvasControl()
         {
             InitializeComponent();
+            SizeChanged += (s, e) =>
+            {
+                if (_lastWorld != null) DrawWorld(_lastWorld);
+            };
         }
 
         private void ClearCanvas()
@@ -51,13 +57,17 @@ namespace AgentSim.Wpf.Views
         /// <summary>
         /// Draws a single agent
         /// </summary>
-        private void DrawAgent(Agent agent)
+        private void DrawAgent(Agent agent, double scaleX, double scaleY)
         {
+            if (agent == null) return;
+
             Ellipse ellipse = CreateAgentShape();
 
-            Canvas.SetLeft(ellipse, agent.X);
-            Canvas.SetTop(ellipse, agent.Y);
+            double left = (agent.X * scaleX) - (ellipse.Width / 2);
+            double top = (agent.Y * scaleY) - (ellipse.Height / 2);
 
+            Canvas.SetLeft(ellipse, left);
+            Canvas.SetTop(ellipse, top);
             WorldCanvas.Children.Add(ellipse);
         }
 
@@ -66,12 +76,23 @@ namespace AgentSim.Wpf.Views
         /// </summary>
         public void DrawWorld(World world)
         {
+            _lastWorld = world;
+
             ClearCanvas();
+
+            if (world == null) return;
+            if (world.Width <= 0 || world.Height <= 0) return;
+            if (WorldCanvas.ActualWidth <= 0 || WorldCanvas.ActualHeight <= 0) return;
+
+            double scaleX = WorldCanvas.ActualWidth / world.Width;
+            double scaleY = WorldCanvas.ActualHeight / world.Height;
 
             foreach (Agent agent in world.Agents)
             {
-                DrawAgent(agent);
+                DrawAgent(agent, scaleX, scaleY);
             }
         }
     }
 }
+
+
