@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace AgentSim.Wpf.Views
 {
-    /// <summary>
-    /// Interaction logic for WorldCanvasControl.xaml
-    /// </summary>
     public partial class WorldCanvasControl : UserControl
     {
         public WorldCanvasControl()
