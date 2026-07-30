@@ -30,7 +30,7 @@ namespace AgentSim.Wpf.Views
             _viewModel.Simulation.Engine.Ticked += (s, e) =>
             {
                 Dispatcher.Invoke(() =>
-                    WorldCanvasControl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
+                    WorldCanvasCtrl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
             };
         }
     }

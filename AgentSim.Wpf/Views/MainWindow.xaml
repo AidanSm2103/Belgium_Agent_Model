@@ -74,7 +74,7 @@
         </StackPanel>
 
         <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="15">
-            <views:WorldCanvasControl />
+            <views:WorldCanvasControl x:Name="WorldCanvasCtrl"/>
         </Border>
     </Grid>
 </Window>
