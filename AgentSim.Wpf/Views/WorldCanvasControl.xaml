@@ -10,7 +10,7 @@
         <Canvas
             x:Name="WorldCanvas"
             Background="White"
-            HorizontalAlignment="Strtch"
+            HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"/>
     </Grid>
 </UserControl>
