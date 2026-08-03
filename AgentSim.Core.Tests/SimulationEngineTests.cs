@@ -31,7 +31,7 @@ namespace AgentSim.Core.Tests
 
             engine.Setup();
 
-            Assert.Equal(15, engine.World.Agents.Count);
+            Assert.Equal(15, engine.Worlds.Agents.Count);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace AgentSim.Core.Tests
         {
             var engine = CreateEngine(agentCount: 1);
             engine.Setup();
-            var agent = engine.World.Agents[0];
+            var agent = engine.Worlds.Agents[0];
             var originalX = agent.X;
             var originalY = agent.Y;
 
