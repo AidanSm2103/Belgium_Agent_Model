@@ -12,11 +12,15 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace AgentSim.Core.Scripting
 {
-    // <summary>
+    /// <summary>
     /// Compiles a user-written C# snippet (the body of a behavior — see
     /// ScriptGlobals for what names it can use: Agent, World, Rng) into a
     /// live IAgentBehavior. This is the main entry point the UI's rules
     /// editor calls when the user clicks "Apply".
+    ///
+    /// Compile() runs ScriptSafetyChecker first, then attempts a real Roslyn
+    /// compile (which catches syntax/type errors) before ever executing
+    /// anything.
     /// </summary>
     public static class BehaviorCompiler
     {
@@ -26,9 +30,9 @@ namespace AgentSim.Core.Scripting
 
         public static BehaviorCompileResult Compile(string userCode)
         {
-            if (string.IsNullOrWhiteSpace(userCode))
+            if (!ScriptSafetyChecker.TryValidate(userCode, out var safetyReason))
             {
-                return BehaviorCompileResult.Fail("Script is empty.");
+                return BehaviorCompileResult.Fail(safetyReason!);
             }
 
             try
