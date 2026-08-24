@@ -59,37 +59,37 @@ namespace AgentSim.Core.Tests.Scripting
             Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
         }
 
-        // [Fact]
-        // public void Execute_InfiniteLoop_DeactivatesAgent()
-        // {
-        // // Arrange
-        // var script = @"
-        // while (true)
-        // {
-        // }
-        // ";
+        [Fact]
+        public void Execute_InfiniteLoop_DeactivatesAgent()
+        {
+        // Arrange
+            var script = @"
+            while (true)
+            {
+            }
+            ";
 
-        // var result = BehaviorCompiler.Compile(script);
+            var result = BehaviorCompiler.Compile(script);
 
-        // Assert.True(result.Success, result.ErrorMessage);
-        // Assert.NotNull(result.Behavior);
+            Assert.True(result.Success, result.ErrorMessage);
+            Assert.NotNull(result.Behavior);
 
-        // var world = new World(100, 100);
-        // var agent = new Agent(
-        // id: 1,
-        // x: 50,
-        // y: 50,
-        // heading: 0,
-        // behavior: result.Behavior!
-        // );
+            var world = new World(100, 100);
+            var agent = new Agent(
+            id: 1,
+            x: 50,
+            y: 50,
+            heading: 0,
+            behavior: result.Behavior!
+            );
 
-        // var rng = new RandomProvider(seed: 42);
+            var rng = new RandomProvider(seed: 42);
 
-        // // Act
-        // result.Behavior!.Execute(agent, world, rng);
+        // Act
+            result.Behavior!.Execute(agent, world, rng);
 
-        // // Assert
-        // Assert.False(agent.IsActive);
-        // }
+        // Assert
+           Assert.False(agent.IsActive);
+        }
     }
 }

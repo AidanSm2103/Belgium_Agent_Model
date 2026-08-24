@@ -38,12 +38,17 @@ namespace AgentSim.Core.Scripting
 
             try
             {
-                var task = _script.RunAsync(globals);
+                var task = Task.Run(() => _script.RunAsync(globals));
                 if (!task.Wait(Timeout))
                 {
                     // Script took too long — don't let it hang the tick loop.
                     agent.IsActive = false;
                     return;
+                }
+
+                if (task.IsFaulted)
+                {
+                    agent.IsActive = false;
                 }
             }
             catch (Exception)
