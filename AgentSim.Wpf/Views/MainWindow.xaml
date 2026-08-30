@@ -71,6 +71,7 @@
                 <TextBlock Text="Ticks: " />
                 <TextBlock Text="{Binding Simulation.TickCount}" FontWeight="Bold" />
             </StackPanel>
+            <views:RulesEditorControl DataContext="{Binding RulesEditor}" Height="250" Margin="0,15,0,0" />
         </StackPanel>
 
         <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="15">
