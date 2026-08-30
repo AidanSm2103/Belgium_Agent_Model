@@ -10,7 +10,7 @@ namespace AgentSim.Wpf.ViewModels
     public class MainViewModel : ViewModelBase
     {
         public SimulationViewModel Simulation { get; }
-
+        public RulesEditorViewModel RulesEditor { get; } = new RulesEditorViewModel();
         public MainViewModel()
         {
             Simulation = new SimulationViewModel();
