@@ -32,6 +32,8 @@ namespace AgentSim.Wpf.Views
                 Dispatcher.Invoke(() =>
                     WorldCanvasCtrl.DrawWorld(_viewModel.Simulation.Engine.Worlds));
             };
+
+            PlotCtrl.Connect(_viewModel.Simulation.Engine);
         }
     }
 }
