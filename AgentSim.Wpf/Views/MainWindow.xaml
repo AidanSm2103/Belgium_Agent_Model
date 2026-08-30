@@ -73,8 +73,24 @@
             </StackPanel>
         </StackPanel>
 
-        <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="15">
-            <views:WorldCanvasControl x:Name="WorldCanvasCtrl"/>
-        </Border>
+        <Grid Grid.Column="1" Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    Margin="0,0,0,10">
+                <views:WorldCanvasControl x:Name="WorldCanvasCtrl"/>
+            </Border>
+
+            <Border Grid.Row="1"
+                    BorderBrush="Black"
+                    BorderThickness="1">
+                <views:PlotControl x:Name="PlotCtrl"/>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
