@@ -86,18 +86,14 @@ namespace AgentSim.Wpf.Views
 
             for (int i = 0; i < _agentCounts.Count; i++)
             {
-                double x;
-
-                if (_agentCounts.Count == 1)
-                {
-                    x = 0;
-                }
-                else
-                {
-                    x = i * (width / (_agentCounts.Count - 1));
-                }
+                double x = _agentCounts.Count == 1
+                    ? 0
+                    : i * (width / (_agentCounts.Count - 1));
 
                 double y = height - (_agentCounts[i] / (double)maxAgents * height);
+
+                // Defensive clamp the line should never visually escape the plot's own bounds.
+                y = Math.Max(0, Math.Min(height, y));
 
                 line.Points.Add(new Point(x, y));
             }
