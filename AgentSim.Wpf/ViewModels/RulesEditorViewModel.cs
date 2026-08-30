@@ -1,10 +1,13 @@
 using System.Windows.Input;
+using AgentSim.Core.Scripting;
+using AgentSim.Core.Simulation;
 
 namespace AgentSim.Wpf.ViewModels
 {
     public class RulesEditorViewModel : ViewModelBase
     {
-        private string _scriptText = "public void Update(Agent agent)\n{\n    // Type behavior here\n}";
+        private readonly SimulationEngine _engine;
+        private string _scriptText = ScriptTemplates.RandomWalk;
         private string _statusMessage = "";
         private bool _hasError;
 
@@ -28,29 +31,24 @@ namespace AgentSim.Wpf.ViewModels
 
         public ICommand ApplyCommand { get; }
 
-        public RulesEditorViewModel()
+        public RulesEditorViewModel(SimulationEngine engine)
         {
+            _engine = engine;
             ApplyCommand = new RelayCommand(ApplyScript);
         }
 
         private void ApplyScript()
         {
-            if (string.IsNullOrWhiteSpace(ScriptText))
-            {
-                HasError = true;
-                StatusMessage = "Error: Script cannot be empty.";
-                return;
-            }
-
-            if (ScriptText.Contains("error"))
-            {
-                HasError = true;
-                StatusMessage = "Compile Error: Invalid C# syntax detected.";
-            }
-            else
+            var result = ScriptApplier.ApplyScript(ScriptText, _engine);
+            if (result.Success)
             {
                 HasError = false;
                 StatusMessage = "Success: Behavior compiled and applied to agents!";
+            }
+            else
+            {
+                HasError = true;
+                StatusMessage = $"Error: {result.ErrorMessage}";
             }
         }
     }
