@@ -41,6 +41,7 @@ namespace AgentSim.Core.Simulation
         {
             _rng = new RandomProvider(Settings.Seed);
             Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
+            Worlds.InitializePatches(columns: 20, rows: 20);
             TickCount = 0;
 
             for (int i = 0; i < Settings.AgentCount; i++)
