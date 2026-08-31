@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using AgentSim.Core.Agents;
 using AgentSim.Core.Worlds;
+using AgentSim.Core.Scripting;
 
 namespace AgentSim.Wpf.Views
 {
@@ -35,29 +36,28 @@ namespace AgentSim.Wpf.Views
             WorldCanvas.Children.Clear();
         }
 
-        ///<summary>
-        /// Creates the visual representation of an agent
-        /// </summary>
-        private Ellipse CreateAgentShape()
+        // Creates the visual representation of an agent
+
+        private Ellipse CreateAgentShape(Agent agent)
         {
+            bool isScripted = agent.Behavior is ScriptedBehavior;
+
             return new Ellipse
             {
                 Width = 10,
                 Height = 10,
-                Fill = Brushes.DodgerBlue,
-                Stroke = Brushes.Black, 
+                Fill = isScripted ? Brushes.OrangeRed : Brushes.DodgerBlue,
+                Stroke = Brushes.Black,
                 StrokeThickness = 1
             };
         }
 
-        /// <summary>
-        /// Draws a single agent
-        /// </summary>
+        // Draws a single agent
         private void DrawAgent(Agent agent, double scaleX, double scaleY)
         {
-            if (agent == null) return;
+            if (agent == null || !agent.IsActive) return;
 
-            Ellipse ellipse = CreateAgentShape();
+            Ellipse ellipse = CreateAgentShape(agent);
 
             double left = (agent.X * scaleX) - (ellipse.Width / 2);
             double top = (agent.Y * scaleY) - (ellipse.Height / 2);
@@ -67,9 +67,7 @@ namespace AgentSim.Wpf.Views
             WorldCanvas.Children.Add(ellipse);
         }
 
-        ///<summary>
-        /// Draws all agents ccurrently in the world
-        /// </summary>
+        // Draws all agents ccurrently in the world
         public void DrawWorld(World world)
         {
             _lastWorld = world;
