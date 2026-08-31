@@ -17,7 +17,6 @@ namespace AgentSim.Core.Worlds
         private readonly List<Agent> _agents = new();
         public IReadOnlyList<Agent> Agents => _agents;
 
-        // Optional patch grid — not required for the random-walk MVP, available for later features (patch coloring, agent-environment interaction).
         public Patch[,]? Patches { get; private set; }
 
         public World(double width, double height)
@@ -46,6 +45,22 @@ namespace AgentSim.Core.Worlds
                     Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight);
                 }
             }
+        }
+
+        public Patch? GetPatchAt(double x, double y)
+        {
+            if (Patches == null) return null;
+
+            var (wx, wy) = Wrap(x, y);
+            int columns = Patches.GetLength(0);
+            int rows = Patches.GetLength(1);
+
+            int col = (int)(wx / Width * columns);
+            int row = (int)(wy / Height * rows);
+            col = Math.Clamp(col, 0, columns - 1);
+            row = Math.Clamp(row, 0, rows - 1);
+
+            return Patches[col, row];
         }
 
         // Wraps a position around world bounds (torus topology)

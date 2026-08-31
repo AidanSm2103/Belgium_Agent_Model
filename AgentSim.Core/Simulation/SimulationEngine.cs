@@ -16,10 +16,10 @@ namespace AgentSim.Core.Simulation
 {
     public class SimulationEngine
     {
-        public World Worlds {get; private set;}
-        public SimulationSettings Settings { get;}
-        public int TickCount{get; private set;}
-        public bool IsRunning {get; private set;}
+        public World Worlds { get; private set; }
+        public SimulationSettings Settings { get; }
+        public int TickCount { get; private set; }
+        public bool IsRunning { get; private set; }
 
         private RandomProvider _rng;
 
@@ -41,18 +41,19 @@ namespace AgentSim.Core.Simulation
         {
             _rng = new RandomProvider(Settings.Seed);
             Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
+            Worlds.InitializePatches(columns: 20, rows: 20);
             TickCount = 0;
 
-            for(int i=0; i<Settings.AgentCount; i++)
+            for (int i = 0; i < Settings.AgentCount; i++)
             {
-                double x = _rng.NextDouble()*Settings.WorldWidth;
-                double y = _rng.NextDouble()*Settings.WorldHeight;
-                double heading = _rng.NextDouble()*360;
+                double x = _rng.NextDouble() * Settings.WorldWidth;
+                double y = _rng.NextDouble() * Settings.WorldHeight;
+                double heading = _rng.NextDouble() * 360;
 
                 var behavior = new RandomWalkBehavior(Settings.MaxTurnDegrees, Settings.StepSize);
                 Worlds.AddAgent(new Agent(i, x, y, heading, behavior));
             }
-            Ticked?.Invoke(this,EventArgs.Empty);
+            Ticked?.Invoke(this, EventArgs.Empty);
         }
 
         //GO button in NetLogo
@@ -60,7 +61,7 @@ namespace AgentSim.Core.Simulation
         //The UI calls this on a timer for continuous running or only onxe per click for the Setup button from above
         public void Tick()
         {
-            foreach(var agent in Worlds.Agents)
+            foreach (var agent in Worlds.Agents)
             {
                 agent.Step(Worlds, _rng);
             }
@@ -71,5 +72,20 @@ namespace AgentSim.Core.Simulation
 
         public void Start() => IsRunning = true;
         public void Stop() => IsRunning = false;
-    }
+    
+
+        /// Applies a new behavior to every agent currently in the world. Used
+        /// by the scripting UI to apply a compiled user script to the running
+        /// simulation without needing a full Setup() (agents keep their current
+        /// position/heading, only their behavior changes).
+        public void ApplyBehaviorToAllAgents(IAgentBehavior behavior)
+        {
+            if (behavior == null) return;
+
+            foreach (var agent in Worlds.Agents)
+            {
+                agent.Behavior = behavior;
+            }
+        }
+    }   
 }
