@@ -1,5 +1,6 @@
 using AgentSim.Core.Agents;
 using AgentSim.Core.Scripting;
+using AgentSim.Core.Simulation;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
 using Xunit;
@@ -8,6 +9,9 @@ namespace AgentSim.Core.Tests.Scripting
 {
     public class BehaviorCompilerTests
     {
+        private static SimulationEngine CreateScratchEngine() =>
+            new(new SimulationSettings { WorldWidth = 100, WorldHeight = 100, AgentCount = 0 });
+
         // TEST 1: Valid script
         [Fact]
         public void Compile_ValidScript_ReturnsWorkingBehavior()
@@ -34,8 +38,9 @@ namespace AgentSim.Core.Tests.Scripting
             );
 
             var rng = new RandomProvider(seed: 42);
+            var engine = CreateScratchEngine();
 
-            result.Behavior!.Execute(agent, world, rng);
+            result.Behavior!.Execute(agent, world, rng, engine);
 
             Assert.Equal(51, agent.X, precision: 5);
         }
@@ -62,7 +67,7 @@ namespace AgentSim.Core.Tests.Scripting
         [Fact]
         public void Execute_InfiniteLoop_DeactivatesAgent()
         {
-        // Arrange
+            // Arrange
             var script = @"
             while (true)
             {
@@ -84,12 +89,13 @@ namespace AgentSim.Core.Tests.Scripting
             );
 
             var rng = new RandomProvider(seed: 42);
+            var engine = CreateScratchEngine();
 
-        // Act
-            result.Behavior!.Execute(agent, world, rng);
+            // Act
+            result.Behavior!.Execute(agent, world, rng, engine);
 
-        // Assert
-           Assert.False(agent.IsActive);
+            // Assert
+            Assert.False(agent.IsActive);
         }
     }
 }

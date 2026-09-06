@@ -1,11 +1,12 @@
-﻿using System;
+﻿using AgentSim.Core.Agents;
+using AgentSim.Core.Simulation;
+using AgentSim.Core.Utilities;
+using AgentSim.Core.Worlds;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AgentSim.Core.Agents;
-using AgentSim.Core.Utilities;
-using AgentSim.Core.Worlds;
 
 namespace AgentSim.Core.Scripting
 {
@@ -18,5 +19,6 @@ namespace AgentSim.Core.Scripting
         public Agent Agent { get; set; } = null!;
         public World World { get; set; } = null!;
         public RandomProvider Rng { get; set; } = null!;
+        public SimulationEngine Engine { get; set; } = null!;
     }
 }

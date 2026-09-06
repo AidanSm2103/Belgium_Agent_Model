@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
+using AgentSim.Core.Simulation;
 
 // Defines how an agent behaves on each simulation tick.
 // RandomWalkBehavior implements this for the MVP demo. Later, when
@@ -15,6 +16,6 @@ namespace AgentSim.Core.Agents
 {
     public interface IAgentBehavior
     {
-        void Execute(Agent agent, World world, RandomProvider rng);
+        void Execute(Agent agent, World world, RandomProvider rng, SimulationEngine engine);
     }
 }

@@ -22,5 +22,10 @@ namespace AgentSim.Core.Simulation
         public double MaxTurnDegrees{ get; set; } = 25;
         //Set to a fixes nr for reproducible test runs later on
         public int? Seed { get; set; } = null;
+
+        // Multi-species support
+        public int SecondaryGroupCount { get; set; } = 0;
+        public string PrimaryGroupSpecies { get; set; } = "GroupA";
+        public string SecondaryGroupSpecies { get; set; } = "GroupB";
     }
 }
