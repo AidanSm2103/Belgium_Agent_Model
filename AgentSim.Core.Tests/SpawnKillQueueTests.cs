@@ -11,50 +11,50 @@ namespace AgentSim.Core.Tests
     public class SpawnKillQueueTests
     {
         [Fact]
-        public void QueueSpawn_DoesNotAddAgentMidTick_AppliesAfterTick()
+        public void QueueToSpawn()
         {
             var settings = new SimulationSettings { AgentCount = 5 };
             var engine = new SimulationEngine(settings);
             engine.Setup();
-            int initialCount = engine.Worlds.Agents.Count;
+            int count = engine.Worlds.Agents.Count;
 
             engine.QueueSpawn(new Agent(999, 0, 0, 0, new RandomWalkBehavior()));
 
-            Assert.Equal(initialCount, engine.Worlds.Agents.Count);
+            Assert.Equal(count, engine.Worlds.Agents.Count);
 
             engine.Tick();
 
-            Assert.Equal(initialCount + 1, engine.Worlds.Agents.Count);
+            Assert.Equal(count + 1, engine.Worlds.Agents.Count);
         }
 
         [Fact]
-        public void QueueKill_DoesNotRemoveAgentMidTick_AppliesAfterTick()
+        public void QueueToKill()
         {
             var settings = new SimulationSettings { AgentCount = 5 };
             var engine = new SimulationEngine(settings);
             engine.Setup();
-            var targetAgent = engine.Worlds.Agents.First();
-            int initialCount = engine.Worlds.Agents.Count;
+            var targetedAgent = engine.Worlds.Agents.First();
+            int count = engine.Worlds.Agents.Count;
 
-            engine.QueueKill(targetAgent);
+            engine.QueueKill(targetedAgent);
 
-            Assert.Equal(initialCount, engine.Worlds.Agents.Count);
-            Assert.Contains(targetAgent, engine.Worlds.Agents);
+            Assert.Equal(count, engine.Worlds.Agents.Count);
+            Assert.Contains(targetedAgent, engine.Worlds.Agents);
 
             engine.Tick();
 
-            Assert.Equal(initialCount - 1, engine.Worlds.Agents.Count);
-            Assert.DoesNotContain(targetAgent, engine.Worlds.Agents);
+            Assert.Equal(count - 1, engine.Worlds.Agents.Count);
+            Assert.DoesNotContain(targetedAgent, engine.Worlds.Agents);
         }
 
         [Fact]
-        public void QueuedSpawnsAndKills_DuringScriptExecution_DoNotCrashTickLoop()
+        public void QueuedSpawnsAndKills()
         {
             var settings = new SimulationSettings { AgentCount = 3 };
             var engine = new SimulationEngine(settings);
             engine.Setup();
 
-            var spawningAndKillingBehavior = new CustomTestBehavior((agent, world, rng, simEngine) =>
+            var spawningAndKillingBehavior = new CustomTestBehavior((agent, world, random, simEngine) =>
             {
                 simEngine.QueueSpawn(new Agent(888, 10, 10, 0, new RandomWalkBehavior()));
                 simEngine.QueueKill(agent);
@@ -68,16 +68,16 @@ namespace AgentSim.Core.Tests
 
         private class CustomTestBehavior : IAgentBehavior
         {
-            private readonly Action<Agent, World, RandomProvider, SimulationEngine> _action;
+            private readonly Action<Agent, World, RandomProvider, SimulationEngine> engine_action;
 
             public CustomTestBehavior(Action<Agent, World, RandomProvider, SimulationEngine> action)
             {
-                _action = action;
+                engine_action = action;
             }
 
-            public void Execute(Agent agent, World world, RandomProvider rng, SimulationEngine engine)
+            public void Execute(Agent agent, World world, RandomProvider random, SimulationEngine engine)
             {
-                _action(agent, world, rng, engine);
+                engine_action(agent, world, random, engine);
             }
         }
     }
