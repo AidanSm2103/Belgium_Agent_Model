@@ -8,8 +8,8 @@ using AgentSim.Core.Worlds;
 using AgentSim.Core.Simulation;
 
 
-// Base class for all simulated agents 
-// Holds position, heading, and delegates per-tick logic to its Behavior
+    // Base class for all simulated agents. Holds position, heading, and
+    // delegates per-tick logic to its assigned Behavior.
 
 namespace AgentSim.Core.Agents
 {
@@ -38,7 +38,9 @@ namespace AgentSim.Core.Agents
             Behavior = behavior;
         }
 
-        // Advances this agent by exactly one tick. Called by SimulationEngine — never call this directly from UI code, go through SimulationEngine.Tick() instead.
+        //Advances this agent by exactly one tick. Called by SimulationEngine —
+        //never call this directly from UI code, go through
+        //SimulationEngine.Tick() instead.
         public void Step(World world, RandomProvider rng, SimulationEngine engine)
         {
             if (!IsActive) return;

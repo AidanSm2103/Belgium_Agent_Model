@@ -85,6 +85,31 @@ AgentSim.Core.Tests/        xUnit tests for the engine and scripting subsystem
 
 Open **Test Explorer** (Test menu → Test Explorer) and run all tests, or `Test → Run All Tests`. Coverage includes the simulation engine, world, agents, random number provider, and the full scripting pipeline (compile, safety checks, timeout handling, apply).
 
+## 📦 Using AgentSim.Core as a library
+
+`AgentSim.Core` has zero dependencies on WPF or any UI framework, so it can be driven entirely headlessly — from a console app, a test suite, or any other .NET front end.
+
+```csharp
+using AgentSim.Core.Simulation;
+
+var settings = new SimulationSettings { AgentCount = 30, WorldWidth = 100, WorldHeight = 100, Seed = 42 };
+var engine = new SimulationEngine(settings);
+engine.Setup();
+
+for (int i = 0; i < 100; i++)
+    engine.Tick();
+
+Console.WriteLine($"Final agent count: {engine.Worlds.Agents.Count}");
+```
+
+See `AgentSim.ConsoleDemo/Program.cs` for a full working example covering headless simulation, Roslyn scripting, and Monte Carlo batch runs with statistical summaries — all with zero UI involvement.
+
+### Running the console demo
+
+```powershell
+dotnet run --project AgentSim.ConsoleDemo
+```
+
 ## 👥 Team
 
 Built by a 7-person team split across five areas: simulation engine, rendering, UI/control panel, scripting, and QA/DevOps.

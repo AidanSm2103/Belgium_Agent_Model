@@ -67,5 +67,6 @@ namespace AgentSim.Core.Analysis
             SecondaryGroupSpecies = baseSettings.SecondaryGroupSpecies,
             Seed = seed
         };
+
     }
 }
