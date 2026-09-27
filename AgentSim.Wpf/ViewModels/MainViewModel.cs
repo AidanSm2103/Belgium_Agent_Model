@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AgentSim.Core; 
+﻿using AgentSim.Core;
+using System;
 
 namespace AgentSim.Wpf.ViewModels
 {
@@ -11,10 +7,13 @@ namespace AgentSim.Wpf.ViewModels
     {
         public SimulationViewModel Simulation { get; }
         public RulesEditorViewModel RulesEditor { get; }
+
         public MainViewModel()
         {
             Simulation = new SimulationViewModel();
             RulesEditor = new RulesEditorViewModel(Simulation.Engine);
+
+            Simulation.SetRulesEditor(RulesEditor);
         }
     }
 }
