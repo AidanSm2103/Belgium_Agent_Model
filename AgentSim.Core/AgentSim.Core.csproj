@@ -4,6 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+     <PackageId>AgentSim.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>AgentSim Studio Team</Authors>
+    <Description>Reusable agent-based modelling engine with Roslyn scripting support</Description>
   </PropertyGroup>
 
   <ItemGroup>

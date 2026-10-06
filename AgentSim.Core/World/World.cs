@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Agents;
-
-// The simulation space. Owns the agent collection, the patch grid, and bounds/wrapping logic
+// The simulation space. Owns the agent collection, the patch grid, and
+// bounds/wrapping logic
 
 namespace AgentSim.Core.Worlds
 {
@@ -25,13 +25,17 @@ namespace AgentSim.Core.Worlds
             Height = height;
         }
 
+        //Adds an agent to the world
         public void AddAgent(Agent agent) => _agents.Add(agent);
 
+        //Removes an agent from the world
         public void RemoveAgent(Agent agent) => _agents.Remove(agent);
 
+        //Removes all agents from the world
         public void Clear() => _agents.Clear();
 
-        // Builds a patch grid of the given resolution over the world's bounds. Call this from SimulationEngine.Setup() only if/when patches are needed
+        // Builds a patch grid of the given resolution over the world's bounds.
+        // Call this from SimulationEngine.Setup() only if/when patches are needed.
         public void InitializePatches(int columns, int rows)
         {
             Patches = new Patch[columns, rows];
@@ -47,6 +51,7 @@ namespace AgentSim.Core.Worlds
             }
         }
 
+        //Returns the patch under the given world-space position, or null if patches haven't been initialized
         public Patch? GetPatchAt(double x, double y)
         {
             if (Patches == null) return null;
@@ -63,8 +68,8 @@ namespace AgentSim.Core.Worlds
             return Patches[col, row];
         }
 
-        // Wraps a position around world bounds (torus topology)
-        // Always route new agent positions through this so agents never leave the visible world
+        // Wraps a position around world bounds (torus topology). Always route
+        // new agent positions through this so agents never leave the visible world.
         public (double X, double Y) Wrap(double x, double y)
         {
             double wrappedX = ((x % Width) + Width) % Width;
