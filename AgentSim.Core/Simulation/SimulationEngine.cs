@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AgentSim.Core.Agents;
 using AgentSim.Core.Utilities; 
 using AgentSim.Core.Worlds;
-using AgentSim.Core.Agents;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 
 // This class owns the tick loop and the current state of the simulation
 // It does not have a timer but rather the UI calls Tick() repeatedly once the user clicks "Start" for example
@@ -67,7 +68,7 @@ namespace AgentSim.Core.Simulation
         // This will advance our simulation by exactly one tick - every agent moves once
         public void Tick()
         {
-            foreach (var agent in Worlds.Agents)
+            foreach (var agent in Worlds.Agents.ToList())
             {
                 agent.Step(Worlds, _rng, this);
             }
@@ -106,6 +107,17 @@ namespace AgentSim.Core.Simulation
             if (behavior == null) return;
 
             foreach (var agent in Worlds.Agents)
+            {
+                agent.Behavior = behavior;
+            }
+        }
+
+        // Multi-species: applies a behavior only to agents matching a predicate
+        public void ApplyBehaviorToAgentsMatching(Func<Agent, bool> predicate, IAgentBehavior behavior)
+        {
+            if (behavior == null || predicate == null) return;
+
+            foreach (var agent in Worlds.Agents.Where(predicate))
             {
                 agent.Behavior = behavior;
             }

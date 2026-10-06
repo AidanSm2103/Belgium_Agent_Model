@@ -46,7 +46,10 @@ namespace AgentSim.Core.Worlds
             {
                 for (int row = 0; row < rows; row++)
                 {
-                    Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight);
+                    Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight)
+                    {
+                        Value = 100
+                    };
                 }
             }
         }
