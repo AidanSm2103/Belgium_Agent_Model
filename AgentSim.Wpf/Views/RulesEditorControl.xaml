@@ -13,7 +13,18 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Scripting Editor (C#)" FontWeight="Bold" Margin="0,0,0,5"/>
+        <!-- Header row: title on the left, expand button on the right -->
+        <Grid Grid.Row="0" Margin="0,0,0,5">
+            <TextBlock Text="Scripting Editor (C#)" FontWeight="Bold" HorizontalAlignment="Left"/>
+            <Button x:Name="ExpandButton"
+                    Content="&#x26F6;"
+                    Width="24" Height="24" Padding="0"
+                    FontSize="14"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="ExpandButton_Click"
+                    ToolTip="Expand editor"/>
+        </Grid>
 
         <TextBox Grid.Row="1" 
                  Text="{Binding ScriptText, UpdateSourceTrigger=PropertyChanged}" 
@@ -37,5 +48,69 @@
                 </Style>
             </TextBlock.Style>
         </TextBlock>
+
+        <!-- Expanded editor: a Popup floats in its own layer above the
+             window, so opening/closing it never resizes or shifts any
+             other control on the page. Bound to the same ScriptText,
+             ApplyCommand, etc. as the compact view above, so they always
+             stay in sync with zero extra code. -->
+        <Popup x:Name="ExpandedPopup"
+               Placement="Center"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               PopupAnimation="Fade">
+            <Border Background="White"
+                    BorderBrush="#0078D7"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Padding="15"
+                    Width="700"
+                    Height="550">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" ShadowDepth="5" Opacity="0.4"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="Scripting Editor (C#)" FontWeight="Bold" FontSize="16" HorizontalAlignment="Left"/>
+                        <Button Content="&#x2715;"
+                                Width="28" Height="28" Padding="0"
+                                HorizontalAlignment="Right"
+                                Click="CollapseButton_Click"
+                                ToolTip="Collapse editor"/>
+                    </Grid>
+
+                    <TextBox Grid.Row="1"
+                             Text="{Binding ScriptText, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             AcceptsTab="True"
+                             FontFamily="Consolas"
+                             FontSize="14"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"/>
+
+                    <Button Grid.Row="2" Content="Apply Behavior" Command="{Binding ApplyCommand}" Margin="0,10,0,5" Padding="8"/>
+
+                    <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Green"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </UserControl>

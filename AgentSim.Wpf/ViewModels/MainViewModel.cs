@@ -7,6 +7,7 @@ namespace AgentSim.Wpf.ViewModels
     {
         public SimulationViewModel Simulation { get; }
         public RulesEditorViewModel RulesEditor { get; }
+        public MonteCarloViewModel MonteCarlo { get; }
 
         public MainViewModel()
         {
@@ -14,6 +15,7 @@ namespace AgentSim.Wpf.ViewModels
             RulesEditor = new RulesEditorViewModel(Simulation.Engine);
 
             Simulation.SetRulesEditor(RulesEditor);
+            MonteCarlo = new MonteCarloViewModel(() => Simulation.Engine.Settings);
         }
     }
 }
