@@ -70,6 +70,17 @@
 
                 <Separator Margin="0,15" />
 
+                <TextBlock Text="Species Groups" FontWeight="Bold" Margin="0,0,0,10" />
+                <TextBlock Text="Primary species name:"/>
+                <TextBox Text="{Binding Simulation.PrimaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Secondary group count (0 = single species):"/>
+                <TextBox Text="{Binding Simulation.SecondaryGroupCount, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Secondary species name:"/>
+                <TextBox Text="{Binding Simulation.SecondaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
+                <TextBlock Text="Click Setup to apply group changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
+
+                <Separator Margin="0,15" />
+
                 <TextBlock Text="Monitors" FontWeight="Bold" Margin="0,0,0,10" />
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Ticks: " />
@@ -115,3 +126,4 @@
         </Grid>
     </Grid>
 </Window>
+

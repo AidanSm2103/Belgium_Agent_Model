@@ -11,6 +11,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header row: title on the left, expand button on the right -->
@@ -34,9 +35,22 @@
                  VerticalScrollBarVisibility="Auto" 
                  HorizontalScrollBarVisibility="Auto" />
 
-        <Button Grid.Row="2" Content="Apply Behavior" Command="{Binding ApplyCommand}" Margin="0,10,0,5" Padding="5"/>
+        <!-- Species target selector: "All" (default) applies to every
+             agent, same as before. Picking a specific species applies
+             the script only to agents tagged with that species. -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+            <TextBlock Text="Apply to:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ComboBox ItemsSource="{Binding AvailableTargets}"
+                      SelectedItem="{Binding TargetSpecies}"
+                      Width="120"/>
+            <Button Content="&#x21BB;" Width="24" Height="24" Padding="0" Margin="5,0,0,0"
+                    Command="{Binding RefreshTargetsCommand}"
+                    ToolTip="Refresh target list (after changing group settings and Setup)"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
+        <Button Grid.Row="3" Content="Apply Behavior" Command="{Binding ApplyCommand}" Margin="0,10,0,5" Padding="5"/>
+
+        <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="Foreground" Value="Green"/>
@@ -52,8 +66,8 @@
         <!-- Expanded editor: a Popup floats in its own layer above the
              window, so opening/closing it never resizes or shifts any
              other control on the page. Bound to the same ScriptText,
-             ApplyCommand, etc. as the compact view above, so they always
-             stay in sync with zero extra code. -->
+             ApplyCommand, TargetSpecies etc. as the compact view above,
+             so they always stay in sync with zero extra code. -->
         <Popup x:Name="ExpandedPopup"
                Placement="Center"
                StaysOpen="True"
@@ -65,7 +79,7 @@
                     CornerRadius="8"
                     Padding="15"
                     Width="700"
-                    Height="550">
+                    Height="580">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="25" ShadowDepth="5" Opacity="0.4"/>
                 </Border.Effect>
@@ -73,6 +87,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
@@ -95,9 +110,19 @@
                              VerticalScrollBarVisibility="Auto"
                              HorizontalScrollBarVisibility="Auto"/>
 
-                    <Button Grid.Row="2" Content="Apply Behavior" Command="{Binding ApplyCommand}" Margin="0,10,0,5" Padding="8"/>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Apply to:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <ComboBox ItemsSource="{Binding AvailableTargets}"
+                                  SelectedItem="{Binding TargetSpecies}"
+                                  Width="150"/>
+                        <Button Content="&#x21BB;" Width="26" Height="26" Padding="0" Margin="5,0,0,0"
+                                Command="{Binding RefreshTargetsCommand}"
+                                ToolTip="Refresh target list"/>
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
+                    <Button Grid.Row="3" Content="Apply Behavior" Command="{Binding ApplyCommand}" Margin="0,10,0,5" Padding="8"/>
+
+                    <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Green"/>

@@ -29,6 +29,30 @@ namespace AgentSim.Wpf.ViewModels
             }
         }
 
+        // Multi-species group configuration — applied to Engine.Settings
+        // on the next Setup(). SecondaryGroupCount = 0 means every agent
+        // belongs to PrimaryGroupSpecies (single-species, unchanged from before).
+        private int _secondaryGroupCount = 0;
+        public int SecondaryGroupCount
+        {
+            get => _secondaryGroupCount;
+            set { _secondaryGroupCount = value; OnPropertyChanged(); }
+        }
+
+        private string _primaryGroupSpecies = "GroupA";
+        public string PrimaryGroupSpecies
+        {
+            get => _primaryGroupSpecies;
+            set { _primaryGroupSpecies = value; OnPropertyChanged(); }
+        }
+
+        private string _secondaryGroupSpecies = "GroupB";
+        public string SecondaryGroupSpecies
+        {
+            get => _secondaryGroupSpecies;
+            set { _secondaryGroupSpecies = value; OnPropertyChanged(); }
+        }
+
         public ICommand SetupCommand { get; }
         public ICommand StepCommand { get; }
         public ICommand GoCommand { get; }
@@ -39,9 +63,10 @@ namespace AgentSim.Wpf.ViewModels
         {
             _rulesEditor = rulesEditor;
         }
+
         public SimulationViewModel()
         {
-             
+
             var settings = new SimulationSettings
             {
                 AgentCount = _agentCount,
@@ -67,14 +92,23 @@ namespace AgentSim.Wpf.ViewModels
 
             SaveCommand = new RelayCommand(Save);
             LoadCommand = new RelayCommand(Load);
-        }   
+        }
 
         private void Setup()
         {
             Engine.Settings.AgentCount = AgentCount;
+            Engine.Settings.SecondaryGroupCount = SecondaryGroupCount;
+            Engine.Settings.PrimaryGroupSpecies = PrimaryGroupSpecies;
+            Engine.Settings.SecondaryGroupSpecies = SecondaryGroupSpecies;
+
             Engine.Setup();
 
             OnPropertyChanged(nameof(TickCount));
+
+            // The rules editor's species dropdown was built from whatever
+            // group settings existed when it was constructed — refresh it
+            // now that Setup() may have changed them.
+            _rulesEditor?.RefreshTargetsCommand.Execute(null);
         }
 
         private void Step()
@@ -118,6 +152,9 @@ namespace AgentSim.Wpf.ViewModels
                 StepSize = Engine.Settings.StepSize,
                 MaxTurnDegrees = Engine.Settings.MaxTurnDegrees,
                 Seed = Engine.Settings.Seed,
+                SecondaryGroupCount = Engine.Settings.SecondaryGroupCount,
+                PrimaryGroupSpecies = Engine.Settings.PrimaryGroupSpecies,
+                SecondaryGroupSpecies = Engine.Settings.SecondaryGroupSpecies,
                 LastAppliedScript = _rulesEditor?.ScriptText
             };
 
@@ -173,8 +210,14 @@ namespace AgentSim.Wpf.ViewModels
                 Engine.Settings.StepSize = data.StepSize;
                 Engine.Settings.MaxTurnDegrees = data.MaxTurnDegrees;
                 Engine.Settings.Seed = data.Seed;
+                Engine.Settings.SecondaryGroupCount = data.SecondaryGroupCount;
+                Engine.Settings.PrimaryGroupSpecies = data.PrimaryGroupSpecies;
+                Engine.Settings.SecondaryGroupSpecies = data.SecondaryGroupSpecies;
 
                 AgentCount = data.AgentCount;
+                SecondaryGroupCount = data.SecondaryGroupCount;
+                PrimaryGroupSpecies = data.PrimaryGroupSpecies;
+                SecondaryGroupSpecies = data.SecondaryGroupSpecies;
 
                 if (_rulesEditor != null && data.LastAppliedScript != null)
                 {
@@ -182,6 +225,7 @@ namespace AgentSim.Wpf.ViewModels
                 }
 
                 Engine.Setup();
+                _rulesEditor?.RefreshTargetsCommand.Execute(null);
 
                 MessageBox.Show(
                     "Simulation loaded successfully.",

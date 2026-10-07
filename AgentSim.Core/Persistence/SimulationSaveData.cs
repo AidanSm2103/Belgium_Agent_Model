@@ -14,6 +14,12 @@ namespace AgentSim.Core.Persistence
 
         public int? Seed { get; set; }
 
+        public int SecondaryGroupCount { get; set; }
+
+        public string PrimaryGroupSpecies { get; set; } = "GroupA";
+
+        public string SecondaryGroupSpecies { get; set; } = "GroupB";
+
         public string? LastAppliedScript { get; set; }
     }
 }
