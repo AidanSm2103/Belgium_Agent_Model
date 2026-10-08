@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AgentSim.Core.Analysis;
+using AgentSim.Core.Scripting;
+using AgentSim.Core.Simulation;
 using Microsoft.Win32;
 
 namespace AgentSim.Wpf.ViewModels
 {
     public class MonteCarloViewModel : ViewModelBase
     {
-        private readonly Func<AgentSim.Core.Simulation.SimulationSettings> _getBaseSettings;
+        private readonly Func<SimulationSettings> _getBaseSettings;
+        private readonly Func<IReadOnlyList<ScriptAssignment>> _getScriptAssignments;
 
         private int _trialCount = 30;
         public int TrialCount
@@ -43,13 +48,16 @@ namespace AgentSim.Wpf.ViewModels
         public ICommand RunCommand { get; }
         public ICommand ExportCommand { get; }
 
-        // Takes a delegate rather than a direct SimulationEngine reference,
-        // so each Monte Carlo trial gets its own fresh engine/settings
-        // (same AgentCount/WorldWidth/etc. as the main simulation, but
-        // never touches the live one on screen).
-        public MonteCarloViewModel(Func<AgentSim.Core.Simulation.SimulationSettings> getBaseSettings)
+        // Takes delegates rather than a direct SimulationEngine reference,
+        // so each Monte Carlo trial gets its own fresh engine (same settings
+        // and the same applied scripts as the simulation on screen) without
+        // ever touching the live one.
+        public MonteCarloViewModel(
+            Func<SimulationSettings> getBaseSettings,
+            Func<IReadOnlyList<ScriptAssignment>> getScriptAssignments)
         {
             _getBaseSettings = getBaseSettings;
+            _getScriptAssignments = getScriptAssignments;
             RunCommand = new RelayCommand(async () => await RunAsync(), () => !IsRunning);
             ExportCommand = new RelayCommand(Export, () => _lastSummary != null);
         }
@@ -57,27 +65,48 @@ namespace AgentSim.Wpf.ViewModels
         private async Task RunAsync()
         {
             IsRunning = true;
+
+            // Copy the assignments now: the list on the live engine can change
+            // while the background run is still going.
+            var assignments = _getScriptAssignments().ToList();
+
             ResultsSummaryText = "Running...";
 
             var settings = new MonteCarloSettings
             {
                 TrialCount = TrialCount,
                 TicksPerTrial = TicksPerTrial,
-                BaseSettings = _getBaseSettings()
+                BaseSettings = _getBaseSettings(),
+                ScriptAssignments = assignments
             };
 
-            // Run on a background thread so the UI doesn't freeze while
-            // many trials execute.
-            var summary = await Task.Run(() => MonteCarloRunner.Run(settings));
+            try
+            {
+                // Background thread so the UI doesn't freeze while trials run.
+                var summary = await Task.Run(() => MonteCarloRunner.Run(settings));
 
-            _lastSummary = summary;
-            ResultsSummaryText =
-                $"Trials: {summary.Trials.Count}\n" +
-                $"Mean final agent count: {summary.MeanFinalAgentCount:F2}\n" +
-                $"StdDev: {summary.StdDevFinalAgentCount:F2}\n" +
-                $"Min: {summary.MinFinalAgentCount}   Max: {summary.MaxFinalAgentCount}";
+                _lastSummary = summary;
 
-            IsRunning = false;
+                string scriptsLine = assignments.Count == 0
+                    ? "Scripts used: none (default random walk — apply a script first to include it)"
+                    : "Scripts used: " + string.Join(", ", assignments.Select(a => a.Species ?? "all agents"));
+
+                ResultsSummaryText =
+                    $"Trials: {summary.Trials.Count}\n" +
+                    $"{scriptsLine}\n" +
+                    $"Mean final agent count: {summary.MeanFinalAgentCount:F2}\n" +
+                    $"StdDev: {summary.StdDevFinalAgentCount:F2}\n" +
+                    $"Min: {summary.MinFinalAgentCount}   Max: {summary.MaxFinalAgentCount}";
+            }
+            catch (Exception ex)
+            {
+                ResultsSummaryText = "Monte Carlo run failed: " + ex.Message;
+            }
+            finally
+            {
+                // Always re-enable the Run button, even if the run threw.
+                IsRunning = false;
+            }
         }
 
         private void Export()

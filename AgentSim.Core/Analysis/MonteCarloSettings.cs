@@ -1,13 +1,12 @@
-﻿using AgentSim.Core.Simulation;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AgentSim.Core.Scripting;
+using AgentSim.Core.Simulation;
 
 namespace AgentSim.Core.Analysis
 {
-    // Parameters for a Monte Carlo batch run
+    // Parameters for a Monte Carlo batch run: how many independent trials
+    // to run and how long each one runs for.
     public class MonteCarloSettings
     {
         public int TrialCount { get; set; } = 30;
@@ -17,5 +16,10 @@ namespace AgentSim.Core.Analysis
         // Fixed BaseSeed = same trial seeds every run (reproducible for
         // testing/marking). Null = a fresh random seed per trial each run.
         public int? BaseSeed { get; set; } = null;
+
+        // Scripts to apply to every trial, in order, right after Setup().
+        // Pass engine.ScriptAssignments here to make the trials behave like
+        // the simulation on screen. Empty = default random walk only.
+        public IReadOnlyList<ScriptAssignment> ScriptAssignments { get; set; } = Array.Empty<ScriptAssignment>();
     }
 }

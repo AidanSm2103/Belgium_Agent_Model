@@ -1,8 +1,8 @@
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 using AgentSim.Core.Agents;
 using AgentSim.Core.Scripting;
 using AgentSim.Core.Simulation;
-using System.Collections.ObjectModel;
-using System.Windows.Input;
 
 namespace AgentSim.Wpf.ViewModels
 {
@@ -78,11 +78,12 @@ namespace AgentSim.Wpf.ViewModels
 
         private void ApplyScript()
         {
-            System.Func<Agent, bool>? filter = TargetSpecies == "All"
-                ? null
-                : (a => a.Species == TargetSpecies);
+            // "All" -> null (every agent). Otherwise the species name. Going
+            // through ApplyScriptToSpecies also records the assignment on the
+            // engine, which is what Monte Carlo and save/load read from.
+            string? target = TargetSpecies == "All" ? null : TargetSpecies;
 
-            var result = ScriptApplier.ApplyScript(ScriptText, _engine, filter);
+            var result = ScriptApplier.ApplyScriptToSpecies(ScriptText, _engine, target);
 
             if (result.Success)
             {

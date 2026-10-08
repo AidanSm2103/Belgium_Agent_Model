@@ -209,6 +209,10 @@ namespace AgentSim.Wpf.ViewModels
                 LastAppliedScript = _rulesEditor?.ScriptText
             };
 
+            // Full snapshot: agent positions/species/behaviors, patch values,
+            // tick count and the scripts applied so far.
+            SimulationSnapshot.Capture(Engine, data);
+
             try
             {
                 SimulationPersistence.Save(data, dialog.FileName);
@@ -283,14 +287,20 @@ namespace AgentSim.Wpf.ViewModels
                     _rulesEditor.ScriptText = data.LastAppliedScript;
                 }
 
-                Engine.Setup();
+                // Rebuilds agents, patches, tick count and behaviors from the
+                // file (older files without a snapshot fall back to Setup()).
+                string? warning = SimulationSnapshot.Restore(Engine, data);
+
+                OnPropertyChanged(nameof(TickCount));
                 _rulesEditor?.RefreshTargetsCommand.Execute(null);
 
                 MessageBox.Show(
-                    "Simulation loaded successfully.",
+                    warning == null
+                        ? "Simulation loaded successfully."
+                        : "Simulation loaded, with warnings:\n\n" + warning,
                     "Load Simulation",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    warning == null ? MessageBoxImage.Information : MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {

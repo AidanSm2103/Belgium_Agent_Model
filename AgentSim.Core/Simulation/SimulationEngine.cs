@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
 using AgentSim.Core.Agents;
+using AgentSim.Core.Scripting;
 using System.Runtime.CompilerServices;
 
 // This class owns the tick loop and the current state of the simulation
@@ -25,6 +26,11 @@ namespace AgentSim.Core.Simulation
         private readonly List<Agent> _pendingSpawns = new();
         private readonly List<Agent> _pendingKills = new();
 
+        // Which scripts the user has applied, in order (see ScriptAssignment).
+        // Monte Carlo trials and save/load use this to reproduce them.
+        private readonly List<ScriptAssignment> _scriptAssignments = new();
+        public IReadOnlyList<ScriptAssignment> ScriptAssignments => _scriptAssignments;
+
         // The rendering side of the UI will be subscribed to this this is to know when it is necessary to redraw the canvas
         public event EventHandler? Ticked;
 
@@ -38,20 +44,12 @@ namespace AgentSim.Core.Simulation
         // Used to reinitialize the world and have the agents be spawned fresh
         public void Setup()
         {
-            _rng = new RandomProvider(Settings.Seed);
-            Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
-
-            // Grid size and starting value come from Settings. The grid
-            // dimensions are floored at 1 so a bad value can't produce an
-            // empty grid (which would break GetPatchAt).
-            Worlds.InitializePatches(
-                columns: Math.Max(1, Settings.PatchColumns),
-                rows: Math.Max(1, Settings.PatchRows),
-                initialValue: Settings.PatchInitialValue);
+            CreateFreshWorld();
 
             TickCount = 0;
             _pendingSpawns.Clear();
             _pendingKills.Clear();
+            _scriptAssignments.Clear();   // fresh agents all run the default behavior again
 
             for (int i = 0; i < Settings.AgentCount; i++)
             {
@@ -102,6 +100,69 @@ namespace AgentSim.Core.Simulation
             Ticked?.Invoke(this, EventArgs.Empty);
         }
 
+        // Builds a new World and patch grid from Settings. Grid size and
+        // starting value come from Settings; the grid dimensions are floored
+        // at 1 so a bad value can't produce an empty grid (which would break GetPatchAt).
+        private void CreateFreshWorld()
+        {
+            _rng = new RandomProvider(Settings.Seed);
+            Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
+            Worlds.InitializePatches(
+                columns: Math.Max(1, Settings.PatchColumns),
+                rows: Math.Max(1, Settings.PatchRows),
+                initialValue: Settings.PatchInitialValue);
+        }
+
+        // Rebuilds the simulation from a saved snapshot instead of spawning
+        // new agents: the given agents, patch values, tick count and script
+        // record replace whatever is currently loaded. The random number
+        // stream restarts from Settings.Seed (its position can't be saved),
+        // so a restored run continues from the same STATE but not
+        // necessarily the same random sequence.
+        public void RestoreState(
+            int tickCount,
+            IEnumerable<Agent> agents,
+            IReadOnlyList<double>? patchValues,
+            IReadOnlyList<int>? patchTimers,
+            IEnumerable<ScriptAssignment>? assignments)
+        {
+            CreateFreshWorld();
+            Worlds.RestorePatchState(patchValues, patchTimers);
+
+            foreach (var agent in agents)
+            {
+                Worlds.AddAgent(agent);
+            }
+
+            TickCount = tickCount;
+            _pendingSpawns.Clear();
+            _pendingKills.Clear();
+
+            _scriptAssignments.Clear();
+            if (assignments != null)
+            {
+                _scriptAssignments.AddRange(assignments);
+            }
+
+            Ticked?.Invoke(this, EventArgs.Empty);
+        }
+
+        // Remembers that a script was applied to everyone (species == null)
+        // or to one species. Applying to everyone replaces everything
+        // recorded so far; applying to a species replaces that species' entry.
+        public void RecordScriptAssignment(string? species, string source)
+        {
+            if (species == null)
+            {
+                _scriptAssignments.Clear();
+            }
+            else
+            {
+                _scriptAssignments.RemoveAll(a => a.Species == species);
+            }
+            _scriptAssignments.Add(new ScriptAssignment(species, source));
+        }
+
         public void Start() => IsRunning = true;
         public void Stop() => IsRunning = false;
 
@@ -138,4 +199,3 @@ namespace AgentSim.Core.Simulation
         }
     }
 }
-

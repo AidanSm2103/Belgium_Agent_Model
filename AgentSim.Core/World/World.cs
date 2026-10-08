@@ -86,6 +86,50 @@ namespace AgentSim.Core.Worlds
             }
         }
 
+        // Flattens the patch grid (column by column) into plain lists so it
+        // can be saved. Index = column * rows + row.
+        public (List<double> Values, List<int> Timers) CapturePatchState()
+        {
+            var values = new List<double>();
+            var timers = new List<int>();
+            if (Patches == null) return (values, timers);
+
+            for (int col = 0; col < Patches.GetLength(0); col++)
+            {
+                for (int row = 0; row < Patches.GetLength(1); row++)
+                {
+                    values.Add(Patches[col, row].Value);
+                    timers.Add(Patches[col, row].RegrowthTimer);
+                }
+            }
+            return (values, timers);
+        }
+
+        // Writes saved patch values back onto an already-initialized grid.
+        // If the saved data doesn't match the current grid size, it is
+        // ignored and the freshly initialized values are kept.
+        public void RestorePatchState(IReadOnlyList<double>? values, IReadOnlyList<int>? timers)
+        {
+            if (Patches == null || values == null) return;
+
+            int columns = Patches.GetLength(0);
+            int rows = Patches.GetLength(1);
+            if (values.Count != columns * rows) return;
+
+            for (int col = 0; col < columns; col++)
+            {
+                for (int row = 0; row < rows; row++)
+                {
+                    int i = col * rows + row;
+                    Patches[col, row].Value = values[i];
+                    if (timers != null && timers.Count == values.Count)
+                    {
+                        Patches[col, row].RegrowthTimer = timers[i];
+                    }
+                }
+            }
+        }
+
         //Returns the patch under the given world-space position, or null if patches haven't been initialized
         public Patch? GetPatchAt(double x, double y)
         {
