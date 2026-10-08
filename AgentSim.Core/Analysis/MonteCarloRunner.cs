@@ -1,14 +1,15 @@
-﻿using AgentSim.Core.Agents;
-using AgentSim.Core.Simulation;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AgentSim.Core.Agents;
+using AgentSim.Core.Simulation;
 
 namespace AgentSim.Core.Analysis
 {
-    // Runs a simulation many times over with different random seeds and aggregates the outcomes 
+    // Runs a simulation many times over with different random seeds and
+    // aggregates the outcomes — proves the engine's behavior statistically
+    // rather than trusting any single run. Runs entirely headlessly: no
+    // WPF references anywhere in this file or its dependencies, which is
+    // the proof the engine works as a standalone, reusable library.
     public static class MonteCarloRunner
     {
         public static MonteCarloSummary Run(MonteCarloSettings settings, IAgentBehavior? behaviorOverride = null)
@@ -65,8 +66,11 @@ namespace AgentSim.Core.Analysis
             SecondaryGroupCount = baseSettings.SecondaryGroupCount,
             PrimaryGroupSpecies = baseSettings.PrimaryGroupSpecies,
             SecondaryGroupSpecies = baseSettings.SecondaryGroupSpecies,
+            PatchColumns = baseSettings.PatchColumns,
+            PatchRows = baseSettings.PatchRows,
+            PatchInitialValue = baseSettings.PatchInitialValue,
+            PatchRegrowthTicks = baseSettings.PatchRegrowthTicks,
             Seed = seed
         };
-
     }
 }

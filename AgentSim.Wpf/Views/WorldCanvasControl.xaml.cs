@@ -106,7 +106,10 @@ namespace AgentSim.Wpf.Views
 
             foreach (var patch in world.Patches)
             {
-                double t = Math.Clamp(patch.Value / 100.0, 0.0, 1.0);
+                // Scale against the world's configured full value instead of a
+                // fixed 100, so custom starting values color correctly.
+                double max = world.PatchMaxValue;
+                double t = max > 0 ? Math.Clamp(patch.Value / max, 0.0, 1.0) : 0.0;
 
                 // Interpolate brown (0) -> green (100)
                 byte r = (byte)(139 + (34 - 139) * t);

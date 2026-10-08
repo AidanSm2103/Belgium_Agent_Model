@@ -19,6 +19,10 @@ namespace AgentSim.Core.Worlds
 
         public Patch[,]? Patches { get; private set; }
 
+        // The value patches start at, and the value an empty patch regrows
+        // to. Also what the canvas treats as "fully grown" when coloring.
+        public double PatchMaxValue { get; private set; } = 100;
+
         public World(double width, double height)
         {
             Width = width;
@@ -35,9 +39,11 @@ namespace AgentSim.Core.Worlds
         public void Clear() => _agents.Clear();
 
         // Builds a patch grid of the given resolution over the world's bounds.
-        // Call this from SimulationEngine.Setup() only if/when patches are needed.
-        public void InitializePatches(int columns, int rows)
+        // Every patch starts at initialValue, which is also the value an
+        // empty patch regrows to (see RegrowPatches).
+        public void InitializePatches(int columns, int rows, double initialValue = 100)
         {
+            PatchMaxValue = initialValue;
             Patches = new Patch[columns, rows];
             double patchWidth = Width / columns;
             double patchHeight = Height / rows;
@@ -48,8 +54,34 @@ namespace AgentSim.Core.Worlds
                 {
                     Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight)
                     {
-                        Value = 100
+                        Value = initialValue
                     };
+                }
+            }
+        }
+
+        // Ticks patch regrowth. A patch that is empty (Value <= 0) counts the
+        // ticks it has been empty; once that reaches regrowthTicks it is
+        // restored to PatchMaxValue. regrowthTicks <= 0 disables regrowth
+        // entirely. Call once per simulation tick.
+        public void RegrowPatches(int regrowthTicks)
+        {
+            if (Patches == null || regrowthTicks <= 0) return;
+
+            foreach (var patch in Patches)
+            {
+                if (patch.Value <= 0)
+                {
+                    patch.RegrowthTimer++;
+                    if (patch.RegrowthTimer >= regrowthTicks)
+                    {
+                        patch.Value = PatchMaxValue;
+                        patch.RegrowthTimer = 0;
+                    }
+                }
+                else
+                {
+                    patch.RegrowthTimer = 0;
                 }
             }
         }

@@ -53,6 +53,36 @@ namespace AgentSim.Wpf.ViewModels
             set { _secondaryGroupSpecies = value; OnPropertyChanged(); }
         }
 
+        // Patch configuration — applied to Engine.Settings on the next Setup().
+        private int _patchColumns = 20;
+        public int PatchColumns
+        {
+            get => _patchColumns;
+            set { _patchColumns = value; OnPropertyChanged(); }
+        }
+
+        private int _patchRows = 20;
+        public int PatchRows
+        {
+            get => _patchRows;
+            set { _patchRows = value; OnPropertyChanged(); }
+        }
+
+        private double _patchInitialValue = 100;
+        public double PatchInitialValue
+        {
+            get => _patchInitialValue;
+            set { _patchInitialValue = value; OnPropertyChanged(); }
+        }
+
+        // 0 = patches never regrow. The app starts with regrowth switched on.
+        private int _patchRegrowthTicks = 50;
+        public int PatchRegrowthTicks
+        {
+            get => _patchRegrowthTicks;
+            set { _patchRegrowthTicks = value; OnPropertyChanged(); }
+        }
+
         public ICommand SetupCommand { get; }
         public ICommand StepCommand { get; }
         public ICommand GoCommand { get; }
@@ -73,7 +103,11 @@ namespace AgentSim.Wpf.ViewModels
                 WorldWidth = 400,
                 WorldHeight = 400,
                 StepSize = 3.0,
-                MaxTurnDegrees = 25
+                MaxTurnDegrees = 25,
+                PatchColumns = _patchColumns,
+                PatchRows = _patchRows,
+                PatchInitialValue = _patchInitialValue,
+                PatchRegrowthTicks = _patchRegrowthTicks
             };
 
             Engine = new SimulationEngine(settings);
@@ -100,6 +134,19 @@ namespace AgentSim.Wpf.ViewModels
             Engine.Settings.SecondaryGroupCount = SecondaryGroupCount;
             Engine.Settings.PrimaryGroupSpecies = PrimaryGroupSpecies;
             Engine.Settings.SecondaryGroupSpecies = SecondaryGroupSpecies;
+
+            // Clamp to sane ranges and write the clamped value back so the
+            // text boxes show what is actually being used. (Every grid cell
+            // is drawn as a rectangle each tick, so the grid size is capped.)
+            PatchColumns = Math.Clamp(PatchColumns, 1, 50);
+            PatchRows = Math.Clamp(PatchRows, 1, 50);
+            if (PatchInitialValue <= 0) PatchInitialValue = 1;
+            if (PatchRegrowthTicks < 0) PatchRegrowthTicks = 0;
+
+            Engine.Settings.PatchColumns = PatchColumns;
+            Engine.Settings.PatchRows = PatchRows;
+            Engine.Settings.PatchInitialValue = PatchInitialValue;
+            Engine.Settings.PatchRegrowthTicks = PatchRegrowthTicks;
 
             Engine.Setup();
 
@@ -155,6 +202,10 @@ namespace AgentSim.Wpf.ViewModels
                 SecondaryGroupCount = Engine.Settings.SecondaryGroupCount,
                 PrimaryGroupSpecies = Engine.Settings.PrimaryGroupSpecies,
                 SecondaryGroupSpecies = Engine.Settings.SecondaryGroupSpecies,
+                PatchColumns = Engine.Settings.PatchColumns,
+                PatchRows = Engine.Settings.PatchRows,
+                PatchInitialValue = Engine.Settings.PatchInitialValue,
+                PatchRegrowthTicks = Engine.Settings.PatchRegrowthTicks,
                 LastAppliedScript = _rulesEditor?.ScriptText
             };
 
@@ -213,11 +264,19 @@ namespace AgentSim.Wpf.ViewModels
                 Engine.Settings.SecondaryGroupCount = data.SecondaryGroupCount;
                 Engine.Settings.PrimaryGroupSpecies = data.PrimaryGroupSpecies;
                 Engine.Settings.SecondaryGroupSpecies = data.SecondaryGroupSpecies;
+                Engine.Settings.PatchColumns = data.PatchColumns;
+                Engine.Settings.PatchRows = data.PatchRows;
+                Engine.Settings.PatchInitialValue = data.PatchInitialValue;
+                Engine.Settings.PatchRegrowthTicks = data.PatchRegrowthTicks;
 
                 AgentCount = data.AgentCount;
                 SecondaryGroupCount = data.SecondaryGroupCount;
                 PrimaryGroupSpecies = data.PrimaryGroupSpecies;
                 SecondaryGroupSpecies = data.SecondaryGroupSpecies;
+                PatchColumns = data.PatchColumns;
+                PatchRows = data.PatchRows;
+                PatchInitialValue = data.PatchInitialValue;
+                PatchRegrowthTicks = data.PatchRegrowthTicks;
 
                 if (_rulesEditor != null && data.LastAppliedScript != null)
                 {

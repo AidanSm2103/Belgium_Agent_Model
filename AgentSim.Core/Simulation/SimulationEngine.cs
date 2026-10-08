@@ -1,13 +1,12 @@
-﻿using AgentSim.Core.Agents;
-using AgentSim.Core.Utilities; 
-using AgentSim.Core.Worlds;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using AgentSim.Core.Utilities;
+using AgentSim.Core.Worlds;
+using AgentSim.Core.Agents;
+using System.Runtime.CompilerServices;
 
 // This class owns the tick loop and the current state of the simulation
 // It does not have a timer but rather the UI calls Tick() repeatedly once the user clicks "Start" for example
@@ -41,7 +40,15 @@ namespace AgentSim.Core.Simulation
         {
             _rng = new RandomProvider(Settings.Seed);
             Worlds = new World(Settings.WorldWidth, Settings.WorldHeight);
-            Worlds.InitializePatches(columns: 20, rows: 20);
+
+            // Grid size and starting value come from Settings. The grid
+            // dimensions are floored at 1 so a bad value can't produce an
+            // empty grid (which would break GetPatchAt).
+            Worlds.InitializePatches(
+                columns: Math.Max(1, Settings.PatchColumns),
+                rows: Math.Max(1, Settings.PatchRows),
+                initialValue: Settings.PatchInitialValue);
+
             TickCount = 0;
             _pendingSpawns.Clear();
             _pendingKills.Clear();
@@ -64,10 +71,12 @@ namespace AgentSim.Core.Simulation
             Ticked?.Invoke(this, EventArgs.Empty);
         }
 
-        
+
         // This will advance our simulation by exactly one tick - every agent moves once
         public void Tick()
         {
+            // Snapshot with ToList() so the loop is safe even if something
+            // mutates the live agent list directly instead of using the queue.
             foreach (var agent in Worlds.Agents.ToList())
             {
                 agent.Step(Worlds, _rng, this);
@@ -84,6 +93,10 @@ namespace AgentSim.Core.Simulation
                 Worlds.AddAgent(agent);
             }
             _pendingSpawns.Clear();
+
+            // Empty patches count down and regrow (no-op when
+            // Settings.PatchRegrowthTicks is 0).
+            Worlds.RegrowPatches(Settings.PatchRegrowthTicks);
 
             TickCount++;
             Ticked?.Invoke(this, EventArgs.Empty);
@@ -112,7 +125,8 @@ namespace AgentSim.Core.Simulation
             }
         }
 
-        // Multi-species: applies a behavior only to agents matching a predicate
+        // Applies a behavior only to agents matching a predicate, e.g.
+        // agent => agent.Species == "Prey", instead of all-or-nothing.
         public void ApplyBehaviorToAgentsMatching(Func<Agent, bool> predicate, IAgentBehavior behavior)
         {
             if (behavior == null || predicate == null) return;
@@ -122,5 +136,6 @@ namespace AgentSim.Core.Simulation
                 agent.Behavior = behavior;
             }
         }
-    }   
+    }
 }
+

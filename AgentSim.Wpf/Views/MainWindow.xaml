@@ -81,6 +81,19 @@
 
                 <Separator Margin="0,15" />
 
+                <TextBlock Text="Patches" FontWeight="Bold" Margin="0,0,0,10" />
+                <TextBlock Text="Grid columns (1-50):"/>
+                <TextBox Text="{Binding Simulation.PatchColumns, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Grid rows (1-50):"/>
+                <TextBox Text="{Binding Simulation.PatchRows, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Starting value (also the regrow-to value):"/>
+                <TextBox Text="{Binding Simulation.PatchInitialValue, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Regrowth time in ticks (0 = never regrow):"/>
+                <TextBox Text="{Binding Simulation.PatchRegrowthTicks, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
+                <TextBlock Text="Click Setup to apply patch changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
+
+                <Separator Margin="0,15" />
+
                 <TextBlock Text="Monitors" FontWeight="Bold" Margin="0,0,0,10" />
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Ticks: " />
@@ -126,4 +139,3 @@
         </Grid>
     </Grid>
 </Window>
-

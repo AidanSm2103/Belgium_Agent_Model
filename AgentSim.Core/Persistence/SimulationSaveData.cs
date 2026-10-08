@@ -20,6 +20,14 @@ namespace AgentSim.Core.Persistence
 
         public string SecondaryGroupSpecies { get; set; } = "GroupB";
 
+        public int PatchColumns { get; set; } = 20;
+
+        public int PatchRows { get; set; } = 20;
+
+        public double PatchInitialValue { get; set; } = 100;
+
+        public int PatchRegrowthTicks { get; set; } = 0;
+
         public string? LastAppliedScript { get; set; }
     }
 }
