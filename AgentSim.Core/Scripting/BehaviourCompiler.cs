@@ -50,7 +50,7 @@ namespace AgentSim.Core.Scripting
                     return BehaviorCompileResult.Fail(message);
                 }
 
-                return BehaviorCompileResult.Ok(new ScriptedBehavior(script));
+                return BehaviorCompileResult.Ok(new ScriptedBehavior(script, userCode));
             }
             catch (Exception ex)
             {

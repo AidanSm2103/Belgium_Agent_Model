@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
+using AgentSim.Core.Simulation;
 
 namespace AgentSim.Core.Agents;
 
@@ -20,7 +21,7 @@ public class RandomWalkBehavior : IAgentBehavior
         _stepSize = stepSize;
     }
 
-    public void Execute(Agent agent, World world, RandomProvider rng)
+    public void Execute(Agent agent, World world, RandomProvider rng, SimulationEngine engine)
     {
         // Turn by a random amount within [-maxTurnDegrees, +maxTurnDegrees]
         double turn = rng.NextDouble(-_maxTurnDegrees, _maxTurnDegrees);

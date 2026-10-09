@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
+using AgentSim.Core.Simulation;
 
 
-// Base class for all simulated agents 
-// Holds position, heading, and delegates per-tick logic to its Behavior
+    // Base class for all simulated agents. Holds position, heading, and
+    // delegates per-tick logic to its assigned Behavior.
 
 namespace AgentSim.Core.Agents
 {
@@ -18,10 +19,13 @@ namespace AgentSim.Core.Agents
         public double X { get; set; }
         public double Y { get; set; }
 
-        // Heading in degrees. 0 = facing "north" (up), increases clockwise
+        // Heading in degrees. 0 = facing up increases clockwise
         public double Heading { get; set; }
 
         public bool IsActive { get; set; } = true;
+      
+        // Scripts/Rendering distinguish agent types without needing subclasses.
+        public string Species { get; set; } = "Default";
 
         public IAgentBehavior Behavior { get; set; }
 
@@ -34,11 +38,13 @@ namespace AgentSim.Core.Agents
             Behavior = behavior;
         }
 
-        // Advances this agent by exactly one tick. Called by SimulationEngine — never call this directly from UI code, go through SimulationEngine.Tick() instead.
-        public void Step(World world, RandomProvider rng)
+        //Advances this agent by exactly one tick. Called by SimulationEngine —
+        //never call this directly from UI code, go through
+        //SimulationEngine.Tick() instead.
+        public void Step(World world, RandomProvider rng, SimulationEngine engine)
         {
             if (!IsActive) return;
-            Behavior.Execute(this, world, rng);
+            Behavior.Execute(this, world, rng, engine);
         }
     }
 }

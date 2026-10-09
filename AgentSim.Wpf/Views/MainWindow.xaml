@@ -6,73 +6,110 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AgentSim.Wpf"
         mc:Ignorable="d"
-        Title="Belgium Agent Model (BAM)" Height="600" Width="900">
+        Title="Belgium Agent Model (BAM)" Height="600" Width="1000">
 
-        <Window.Resources>
+    <Window.Resources>
 
-    <Style TargetType="Button">
-        <Setter Property="Background" Value="#0078D7"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="10,8"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" 
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#0078D7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
                             CornerRadius="5" 
                             Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
 
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#005A9E"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Background" Value="#CCCCCC"/>
-                            <Setter Property="Foreground" Value="#888888"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>    
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#005A9E"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="#888888"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <Style TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="Foreground" Value="#333333"/>
-    </Style>
-</Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="300" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Margin="15" Background="#F5F5F5">
-            <TextBlock Text="Simulation Controls" FontWeight="Bold" FontSize="16" Margin="0,0,0,15" />
-            
-            <Button Content="Setup" Command="{Binding Simulation.SetupCommand}" Margin="0,5" Padding="5"/>
-            <Button Content="Step" Command="{Binding Simulation.StepCommand}" Margin="0,5" Padding="5"/>
-            <Button Content="Go / Stop" Command="{Binding Simulation.GoCommand}" Margin="0,5" Padding="5"/>
+        <!-- Left panel wrapped in a ScrollViewer so the growing list of
+             controls (scripting, save/load, Monte Carlo) never overflows
+             the window — it scrolls instead. -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="15" Background="#F5F5F5">
+                <TextBlock Text="Simulation Controls" FontWeight="Bold" FontSize="16" Margin="0,0,0,15" />
 
-            <Separator Margin="0,15" />
+                <Button Content="Setup" Command="{Binding Simulation.SetupCommand}" Margin="0,5" Padding="5"/>
+                <Button Content="Step" Command="{Binding Simulation.StepCommand}" Margin="0,5" Padding="5"/>
+                <Button Content="Go / Stop" Command="{Binding Simulation.GoCommand}" Margin="0,5" Padding="5"/>
 
-            <TextBlock Text="{Binding Simulation.AgentCount, StringFormat='Agent Count: {0}'}" />
-            <Slider Minimum="10" Maximum="1000" Value="{Binding Simulation.AgentCount}" TickFrequency="10" IsSnapToTickEnabled="True" Margin="0,5,0,15" />
+                <Separator Margin="0,15" />
 
-            <Separator Margin="0,15" />
+                <TextBlock Text="{Binding Simulation.AgentCount, StringFormat='Agent Count: {0}'}" />
+                <Slider Minimum="10" Maximum="1000" Value="{Binding Simulation.AgentCount}" TickFrequency="10" IsSnapToTickEnabled="True" Margin="0,5,0,15" />
 
-            <TextBlock Text="Monitors" FontWeight="Bold" Margin="0,0,0,10" />
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Ticks: " />
-                <TextBlock Text="{Binding Simulation.TickCount}" FontWeight="Bold" />
+                <Separator Margin="0,15" />
+
+                <TextBlock Text="Species Groups" FontWeight="Bold" Margin="0,0,0,10" />
+                <TextBlock Text="Primary species name:"/>
+                <TextBox Text="{Binding Simulation.PrimaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Secondary group count (0 = single species):"/>
+                <TextBox Text="{Binding Simulation.SecondaryGroupCount, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Secondary species name:"/>
+                <TextBox Text="{Binding Simulation.SecondaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
+                <TextBlock Text="Click Setup to apply group changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
+
+                <Separator Margin="0,15" />
+
+                <TextBlock Text="Patches" FontWeight="Bold" Margin="0,0,0,10" />
+                <TextBlock Text="Grid columns (1-50):"/>
+                <TextBox Text="{Binding Simulation.PatchColumns, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Grid rows (1-50):"/>
+                <TextBox Text="{Binding Simulation.PatchRows, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Starting value (also the regrow-to value):"/>
+                <TextBox Text="{Binding Simulation.PatchInitialValue, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                <TextBlock Text="Regrowth time in ticks (0 = never regrow):"/>
+                <TextBox Text="{Binding Simulation.PatchRegrowthTicks, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
+                <TextBlock Text="Click Setup to apply patch changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
+
+                <Separator Margin="0,15" />
+
+                <TextBlock Text="Save / Load" FontWeight="Bold" Margin="0,0,0,10" />
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Save" Command="{Binding Simulation.SaveCommand}" Margin="0,0,5,0" Padding="5" Width="90"/>
+                    <Button Content="Load" Command="{Binding Simulation.LoadCommand}" Padding="5" Width="90"/>
+                </StackPanel>
+
+                <Separator Margin="0,15" />
+
+                <views:RulesEditorControl DataContext="{Binding RulesEditor}" Height="250" Margin="0,0,0,0" />
+
+                <Separator Margin="0,15" />
+
+                <views:MonteCarloControl DataContext="{Binding MonteCarlo}" />
             </StackPanel>
-            <views:RulesEditorControl DataContext="{Binding RulesEditor}" Height="250" Margin="0,15,0,0" />
-        </StackPanel>
+        </ScrollViewer>
 
         <Grid Grid.Column="1" Margin="15">
             <Grid.RowDefinitions>

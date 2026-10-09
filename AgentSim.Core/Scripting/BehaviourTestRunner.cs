@@ -1,4 +1,5 @@
 ﻿using AgentSim.Core.Agents;
+using AgentSim.Core.Simulation;
 using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
 using System;
@@ -9,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace AgentSim.Core.Scripting
 {
-    // A compiled script can still fail the FIRST time it actually runs, even
-    // though it compiled cleanly — e.g. a null reference or divide-by-zero
-    // that only shows up at execution time. Rather than let that surprise
-    // happen on a real agent mid-simulation, this runs the new behavior once
-    // against a disposable "scratch" agent/world first.
+    // Runs the new behavior once against a disposable "scratch" agent/world first.
     
-    // Use this right after a successful BehaviorCompileResult, before
-    // applying the behavior to real agents.
+    // Use this right after a successful BehaviorCompileResult, before applying the behavior to real agents.
     public static class BehaviorTestRunner
     {
         public static bool TryDryRun(IAgentBehavior behavior, out string? failureReason)
@@ -27,7 +23,14 @@ namespace AgentSim.Core.Scripting
                 var scratchAgent = new Agent(id: -1, x: 50, y: 50, heading: 0, behavior: behavior);
                 var scratchRng = new RandomProvider(seed: 1); // fixed seed = repeatable test
 
-                scratchAgent.Step(scratchWorld, scratchRng);
+                var scratchEngine = new SimulationEngine(new SimulationSettings
+                {
+                    WorldWidth = 100,
+                    WorldHeight = 100,
+                    AgentCount = 0
+                });
+
+                scratchAgent.Step(scratchWorld, scratchRng, scratchEngine);
 
                 // ScriptedBehavior swallows its own exceptions and sets
                 // IsActive = false instead of throwing — so IsActive is the real signal a script failed or timed out on its first run.

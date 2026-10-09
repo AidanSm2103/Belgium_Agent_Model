@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="AgentSim.Wpf.Views.MonteCarloControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignWidth="250">
+    <StackPanel>
+        <TextBlock Text="Monte Carlo" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+
+        <TextBlock Text="Trial Count:"/>
+        <TextBox Text="{Binding TrialCount, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+        <TextBlock Text="Ticks Per Trial:"/>
+        <TextBox Text="{Binding TicksPerTrial, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,10"/>
+
+        <Button Content="Run Monte Carlo" Command="{Binding RunCommand}" Margin="0,0,0,5" Padding="5"/>
+        <Button Content="Export CSV" Command="{Binding ExportCommand}" Padding="5"/>
+
+        <TextBlock Text="Results" FontWeight="Bold" Margin="0,15,0,5"/>
+        <TextBlock Text="{Binding ResultsSummaryText}" TextWrapping="Wrap"/>
+    </StackPanel>
+</UserControl>

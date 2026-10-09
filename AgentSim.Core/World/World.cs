@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AgentSim.Core.Agents;
-
-// The simulation space. Owns the agent collection, the patch grid, and bounds/wrapping logic
+// The simulation space. Owns the agent collection, the patch grid, and
+// bounds/wrapping logic
 
 namespace AgentSim.Core.Worlds
 {
@@ -19,21 +19,31 @@ namespace AgentSim.Core.Worlds
 
         public Patch[,]? Patches { get; private set; }
 
+        // The value patches start at, and the value an empty patch regrows
+        // to. Also what the canvas treats as "fully grown" when coloring.
+        public double PatchMaxValue { get; private set; } = 100;
+
         public World(double width, double height)
         {
             Width = width;
             Height = height;
         }
 
+        //Adds an agent to the world
         public void AddAgent(Agent agent) => _agents.Add(agent);
 
+        //Removes an agent from the world
         public void RemoveAgent(Agent agent) => _agents.Remove(agent);
 
+        //Removes all agents from the world
         public void Clear() => _agents.Clear();
 
-        // Builds a patch grid of the given resolution over the world's bounds. Call this from SimulationEngine.Setup() only if/when patches are needed
-        public void InitializePatches(int columns, int rows)
+        // Builds a patch grid of the given resolution over the world's bounds.
+        // Every patch starts at initialValue, which is also the value an
+        // empty patch regrows to (see RegrowPatches).
+        public void InitializePatches(int columns, int rows, double initialValue = 100)
         {
+            PatchMaxValue = initialValue;
             Patches = new Patch[columns, rows];
             double patchWidth = Width / columns;
             double patchHeight = Height / rows;
@@ -42,11 +52,85 @@ namespace AgentSim.Core.Worlds
             {
                 for (int row = 0; row < rows; row++)
                 {
-                    Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight);
+                    Patches[col, row] = new Patch(col, row, col * patchWidth, row * patchHeight)
+                    {
+                        Value = initialValue
+                    };
                 }
             }
         }
 
+        // Ticks patch regrowth. A patch that is empty (Value <= 0) counts the
+        // ticks it has been empty; once that reaches regrowthTicks it is
+        // restored to PatchMaxValue. regrowthTicks <= 0 disables regrowth
+        // entirely. Call once per simulation tick.
+        public void RegrowPatches(int regrowthTicks)
+        {
+            if (Patches == null || regrowthTicks <= 0) return;
+
+            foreach (var patch in Patches)
+            {
+                if (patch.Value <= 0)
+                {
+                    patch.RegrowthTimer++;
+                    if (patch.RegrowthTimer >= regrowthTicks)
+                    {
+                        patch.Value = PatchMaxValue;
+                        patch.RegrowthTimer = 0;
+                    }
+                }
+                else
+                {
+                    patch.RegrowthTimer = 0;
+                }
+            }
+        }
+
+        // Flattens the patch grid (column by column) into plain lists so it
+        // can be saved. Index = column * rows + row.
+        public (List<double> Values, List<int> Timers) CapturePatchState()
+        {
+            var values = new List<double>();
+            var timers = new List<int>();
+            if (Patches == null) return (values, timers);
+
+            for (int col = 0; col < Patches.GetLength(0); col++)
+            {
+                for (int row = 0; row < Patches.GetLength(1); row++)
+                {
+                    values.Add(Patches[col, row].Value);
+                    timers.Add(Patches[col, row].RegrowthTimer);
+                }
+            }
+            return (values, timers);
+        }
+
+        // Writes saved patch values back onto an already-initialized grid.
+        // If the saved data doesn't match the current grid size, it is
+        // ignored and the freshly initialized values are kept.
+        public void RestorePatchState(IReadOnlyList<double>? values, IReadOnlyList<int>? timers)
+        {
+            if (Patches == null || values == null) return;
+
+            int columns = Patches.GetLength(0);
+            int rows = Patches.GetLength(1);
+            if (values.Count != columns * rows) return;
+
+            for (int col = 0; col < columns; col++)
+            {
+                for (int row = 0; row < rows; row++)
+                {
+                    int i = col * rows + row;
+                    Patches[col, row].Value = values[i];
+                    if (timers != null && timers.Count == values.Count)
+                    {
+                        Patches[col, row].RegrowthTimer = timers[i];
+                    }
+                }
+            }
+        }
+
+        //Returns the patch under the given world-space position, or null if patches haven't been initialized
         public Patch? GetPatchAt(double x, double y)
         {
             if (Patches == null) return null;
@@ -63,8 +147,8 @@ namespace AgentSim.Core.Worlds
             return Patches[col, row];
         }
 
-        // Wraps a position around world bounds (torus topology)
-        // Always route new agent positions through this so agents never leave the visible world
+        // Wraps a position around world bounds (torus topology). Always route
+        // new agent positions through this so agents never leave the visible world.
         public (double X, double Y) Wrap(double x, double y)
         {
             double wrappedX = ((x % Width) + Width) % Width;
