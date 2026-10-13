@@ -21,5 +21,15 @@ namespace AgentSim.Core.Analysis
         // Pass engine.ScriptAssignments here to make the trials behave like
         // the simulation on screen. Empty = default random walk only.
         public IReadOnlyList<ScriptAssignment> ScriptAssignments { get; set; } = Array.Empty<ScriptAssignment>();
+
+        // How much the starting population varies from trial to trial, as a
+        // percentage of each group's configured size. With a base of 30 and
+        // 10, each trial starts with somewhere between 27 and 33 agents
+        // (e.g. 28, 31, 30...). The primary and secondary groups are varied
+        // independently. 0 = every trial starts with exactly the configured
+        // count (the original behaviour). The variation is drawn from the
+        // trial's seed, so a fixed BaseSeed still reproduces the same run.
+        public double StartCountVariancePercent { get; set; } = 0;
     }
 }
+

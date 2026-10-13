@@ -10,12 +10,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AgentSim.Core\AgentSim.Core.csproj" />
+    <Compile Remove="Models\**" />
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Models\**" />
+    <None Remove="Resources\**" />
+    <Page Remove="Models\**" />
+    <Page Remove="Resources\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Resources\" />
+    <ProjectReference Include="..\AgentSim.Core\AgentSim.Core.csproj" />
   </ItemGroup>
 
 </Project>

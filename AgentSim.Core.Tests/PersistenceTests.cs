@@ -30,8 +30,8 @@ namespace AgentSim.Core.Tests
             {
                 Trials = new List<TrialResult>
                 {
-                    new TrialResult { TrialIndex = 0, Seed = 101, FinalAgentCount = 15, FinalTickCount = 50 },
-                    new TrialResult { TrialIndex = 1, Seed = 102, FinalAgentCount = 12, FinalTickCount = 50 }
+                    new TrialResult { TrialIndex = 0, Seed = 101, StartAgentCount = 20, FinalAgentCount = 15, FinalTickCount = 50 },
+                    new TrialResult { TrialIndex = 1, Seed = 102, StartAgentCount = 15, FinalAgentCount = 12, FinalTickCount = 50 }
                 }
             };
 
@@ -41,9 +41,9 @@ namespace AgentSim.Core.Tests
 
             var lines = File.ReadAllLines(tempFilePath);
             Assert.Equal(3, lines.Length);
-            Assert.Equal("TrialIndex,Seed,FinalAgentCount,FinalTickCount", lines[0]);
-            Assert.Equal("0,101,15,50", lines[1]);
-            Assert.Equal("1,102,12,50", lines[2]);
+            Assert.Equal("TrialIndex,Seed,StartAgentCount,FinalAgentCount,NetChange,SurvivalRate,FinalMeanPatchValue,FinalTickCount", lines[0]);
+            Assert.Equal("0,101,20,15,-5,0.75,0,50", lines[1]);
+            Assert.Equal("1,102,15,12,-3,0.8,0,50", lines[2]);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace AgentSim.Core.Tests
 
             var execute = File.ReadAllLines(tempFilePath);
             Assert.Single(execute);
-            Assert.Equal("TrialIndex,Seed,FinalAgentCount,FinalTickCount", execute[0]);
+            Assert.Equal("TrialIndex,Seed,StartAgentCount,FinalAgentCount,NetChange,SurvivalRate,FinalMeanPatchValue,FinalTickCount", execute[0]);
         }
     }
 }

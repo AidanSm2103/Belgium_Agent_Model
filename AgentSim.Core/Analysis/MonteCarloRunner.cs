@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AgentSim.Core.Agents;
 using AgentSim.Core.Scripting;
@@ -15,8 +16,9 @@ namespace AgentSim.Core.Analysis
     {
         public static MonteCarloSummary Run(MonteCarloSettings settings, IAgentBehavior? behaviorOverride = null)
         {
-            var random = new System.Random(settings.BaseSeed ?? System.Environment.TickCount);
+            var random = new Random(settings.BaseSeed ?? Environment.TickCount);
             var trials = new List<TrialResult>();
+            var baseSettings = settings.BaseSettings;
 
             // Compile each assigned script once up front. The compiled
             // behaviors are reused by every trial (compiling per trial
@@ -27,17 +29,31 @@ namespace AgentSim.Core.Analysis
                 var compiled = BehaviorCompiler.Compile(assignment.Source);
                 if (!compiled.Success)
                 {
-                    throw new System.InvalidOperationException(
+                    throw new InvalidOperationException(
                         "A script could not be compiled for the Monte Carlo run: " + compiled.ErrorMessage);
                 }
                 assignments.Add((assignment.Species, compiled.Behavior!));
             }
 
+            // The configured split between the two groups. SecondaryGroupCount
+            // is part of AgentCount, so primary = the rest.
+            int baseSecondary = Math.Clamp(baseSettings.SecondaryGroupCount, 0, Math.Max(0, baseSettings.AgentCount));
+            int basePrimary = Math.Max(0, baseSettings.AgentCount - baseSecondary);
+            bool hasSecondary = baseSecondary > 0;
+
             for (int i = 0; i < settings.TrialCount; i++)
             {
                 int seed = settings.BaseSeed.HasValue ? settings.BaseSeed.Value + i : random.Next();
 
-                var trialSettings = CloneSettings(settings.BaseSettings, seed);
+                // A separate generator for the start-count variation, derived
+                // from the trial seed. It must not share the engine's random
+                // numbers, otherwise changing the variance setting would also
+                // change how the agents move.
+                var variation = new Random(seed ^ 0x5F3759DF);
+                int startPrimary = Jitter(basePrimary, settings.StartCountVariancePercent, variation);
+                int startSecondary = Jitter(baseSecondary, settings.StartCountVariancePercent, variation);
+
+                var trialSettings = CloneSettings(baseSettings, seed, startPrimary + startSecondary, startSecondary);
                 var engine = new SimulationEngine(trialSettings);
                 engine.Setup();
 
@@ -64,42 +80,102 @@ namespace AgentSim.Core.Analysis
                     engine.Tick();
                 }
 
+                // Agents deactivated by a failing script don't count as alive.
+                var alive = engine.Worlds.Agents.Where(a => a.IsActive).ToList();
+
+                int finalPrimary = alive.Count(a => a.Species == baseSettings.PrimaryGroupSpecies);
+                int finalSecondary = hasSecondary && baseSettings.SecondaryGroupSpecies != baseSettings.PrimaryGroupSpecies
+                    ? alive.Count(a => a.Species == baseSettings.SecondaryGroupSpecies)
+                    : 0;
+
                 trials.Add(new TrialResult
                 {
                     TrialIndex = i,
                     Seed = seed,
-                    FinalAgentCount = engine.Worlds.Agents.Count(a => a.IsActive),   // agents deactivated by a failing script don't count as alive
-                    FinalTickCount = engine.TickCount
+                    FinalTickCount = engine.TickCount,
+                    StartAgentCount = startPrimary + startSecondary,
+                    StartPrimaryCount = startPrimary,
+                    StartSecondaryCount = startSecondary,
+                    FinalAgentCount = alive.Count,
+                    FinalPrimaryCount = finalPrimary,
+                    FinalSecondaryCount = finalSecondary,
+                    FinalMeanPatchValue = MeanPatchValue(engine)
                 });
             }
 
             var finalCounts = trials.Select(t => (double)t.FinalAgentCount).ToList();
+            var startCounts = trials.Select(t => (double)t.StartAgentCount).ToList();
 
             return new MonteCarloSummary
             {
                 Trials = trials,
+
                 MeanFinalAgentCount = StatisticsHelper.Mean(finalCounts),
                 StdDevFinalAgentCount = StatisticsHelper.StdDev(finalCounts),
                 MinFinalAgentCount = (int)StatisticsHelper.Min(finalCounts),
-                MaxFinalAgentCount = (int)StatisticsHelper.Max(finalCounts)
+                MaxFinalAgentCount = (int)StatisticsHelper.Max(finalCounts),
+
+                PrimarySpecies = baseSettings.PrimaryGroupSpecies,
+                SecondarySpecies = baseSettings.SecondaryGroupSpecies,
+                HasSecondarySpecies = hasSecondary,
+                BaseStartAgentCount = baseSettings.AgentCount,
+                StartCountVariancePercent = settings.StartCountVariancePercent,
+
+                StartTotal = SeriesStats.From(startCounts),
+                FinalTotal = SeriesStats.From(finalCounts),
+                FinalPrimary = SeriesStats.From(trials.Select(t => (double)t.FinalPrimaryCount)),
+                FinalSecondary = SeriesStats.From(trials.Select(t => (double)t.FinalSecondaryCount)),
+                SurvivalRate = SeriesStats.From(trials.Select(t => t.SurvivalRate)),
+                FinalMeanPatchValue = SeriesStats.From(trials.Select(t => t.FinalMeanPatchValue)),
+
+                StartFinalCorrelation = StatisticsHelper.Correlation(startCounts, finalCounts)
             };
         }
 
-        private static SimulationSettings CloneSettings(SimulationSettings baseSettings, int seed) => new()
+        // Moves a group size up or down by a random whole number of agents,
+        // at most +/- the given percentage of the size (and at least +/- 1
+        // whenever a percentage is set, so small groups still vary).
+        // Never drops a group that existed to zero.
+        private static int Jitter(int count, double percent, Random rng)
         {
-            AgentCount = baseSettings.AgentCount,
-            WorldWidth = baseSettings.WorldWidth,
-            WorldHeight = baseSettings.WorldHeight,
-            StepSize = baseSettings.StepSize,
-            MaxTurnDegrees = baseSettings.MaxTurnDegrees,
-            SecondaryGroupCount = baseSettings.SecondaryGroupCount,
-            PrimaryGroupSpecies = baseSettings.PrimaryGroupSpecies,
-            SecondaryGroupSpecies = baseSettings.SecondaryGroupSpecies,
-            PatchColumns = baseSettings.PatchColumns,
-            PatchRows = baseSettings.PatchRows,
-            PatchInitialValue = baseSettings.PatchInitialValue,
-            PatchRegrowthTicks = baseSettings.PatchRegrowthTicks,
-            Seed = seed
-        };
+            if (count <= 0 || percent <= 0) return Math.Max(0, count);
+
+            int spread = Math.Max(1, (int)Math.Round(count * percent / 100.0));
+            return Math.Max(1, count + rng.Next(-spread, spread + 1));
+        }
+
+        private static double MeanPatchValue(SimulationEngine engine)
+        {
+            var patches = engine.Worlds.Patches;
+            if (patches == null) return 0;
+
+            double total = 0;
+            int count = 0;
+            foreach (var patch in patches)
+            {
+                total += patch.Value;
+                count++;
+            }
+
+            return count == 0 ? 0 : total / count;
+        }
+
+        private static SimulationSettings CloneSettings(
+            SimulationSettings baseSettings, int seed, int agentCount, int secondaryCount) => new()
+            {
+                AgentCount = agentCount,
+                WorldWidth = baseSettings.WorldWidth,
+                WorldHeight = baseSettings.WorldHeight,
+                StepSize = baseSettings.StepSize,
+                MaxTurnDegrees = baseSettings.MaxTurnDegrees,
+                SecondaryGroupCount = secondaryCount,
+                PrimaryGroupSpecies = baseSettings.PrimaryGroupSpecies,
+                SecondaryGroupSpecies = baseSettings.SecondaryGroupSpecies,
+                PatchColumns = baseSettings.PatchColumns,
+                PatchRows = baseSettings.PatchRows,
+                PatchInitialValue = baseSettings.PatchInitialValue,
+                PatchRegrowthTicks = baseSettings.PatchRegrowthTicks,
+                Seed = seed
+            };
     }
 }
