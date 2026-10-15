@@ -2,6 +2,7 @@
 using AgentSim.Core.Simulation;
 using Microsoft.Win32;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -17,6 +18,63 @@ namespace AgentSim.Wpf.ViewModels
         public SimulationEngine Engine { get; }
 
         public int TickCount => Engine.TickCount;
+
+        // ---- Live monitors shown in the header, the stat strip and the
+        // status bar. Refreshed on every tick, Setup and Load. ----
+
+        public bool IsRunning => _isRunning;
+
+        public string StatusText => _isRunning ? "Running" : (Engine.TickCount > 0 ? "Paused" : "Ready");
+
+        private int _liveAgentCount;
+        public int LiveAgentCount
+        {
+            get => _liveAgentCount;
+            private set { _liveAgentCount = value; OnPropertyChanged(); }
+        }
+
+        private string _speciesBreakdown = "";
+        public string SpeciesBreakdown
+        {
+            get => _speciesBreakdown;
+            private set { _speciesBreakdown = value; OnPropertyChanged(); }
+        }
+
+        private string _patchHealthText = "-";
+        public string PatchHealthText
+        {
+            get => _patchHealthText;
+            private set { _patchHealthText = value; OnPropertyChanged(); }
+        }
+
+        private void RefreshLiveStats()
+        {
+            var alive = Engine.Worlds.Agents.Where(a => a.IsActive).ToList();
+            LiveAgentCount = alive.Count;
+
+            SpeciesBreakdown = string.Join("   ",
+                alive.GroupBy(a => a.Species).Select(g => $"{g.Key} {g.Count()}"));
+
+            var patches = Engine.Worlds.Patches;
+            double max = Engine.Worlds.PatchMaxValue;
+            if (patches == null || max <= 0)
+            {
+                PatchHealthText = "-";
+            }
+            else
+            {
+                double total = 0;
+                int count = 0;
+                foreach (var patch in patches)
+                {
+                    total += patch.Value;
+                    count++;
+                }
+                PatchHealthText = count == 0 ? "-" : $"{total / count / max:P0}";
+            }
+
+            OnPropertyChanged(nameof(StatusText));
+        }
 
         private int _agentCount = 100;
         public int AgentCount
@@ -111,7 +169,12 @@ namespace AgentSim.Wpf.ViewModels
             };
 
             Engine = new SimulationEngine(settings);
-            Engine.Ticked += (s, e) => OnPropertyChanged(nameof(TickCount));
+            Engine.Ticked += (s, e) =>
+            {
+                OnPropertyChanged(nameof(TickCount));
+                RefreshLiveStats();
+            };
+            RefreshLiveStats();
 
             _timer = new DispatcherTimer
             {
@@ -151,6 +214,7 @@ namespace AgentSim.Wpf.ViewModels
             Engine.Setup();
 
             OnPropertyChanged(nameof(TickCount));
+            RefreshLiveStats();
 
             // The rules editor's species dropdown was built from whatever
             // group settings existed when it was constructed — refresh it
@@ -166,6 +230,7 @@ namespace AgentSim.Wpf.ViewModels
         private void ToggleGo()
         {
             _isRunning = !_isRunning;
+            OnPropertyChanged(nameof(IsRunning));
 
             if (_isRunning)
             {
@@ -177,6 +242,8 @@ namespace AgentSim.Wpf.ViewModels
                 Engine.Stop();
                 _timer.Stop();
             }
+
+            OnPropertyChanged(nameof(StatusText));
         }
 
         private void Save()
@@ -292,6 +359,7 @@ namespace AgentSim.Wpf.ViewModels
                 string? warning = SimulationSnapshot.Restore(Engine, data);
 
                 OnPropertyChanged(nameof(TickCount));
+                RefreshLiveStats();
                 _rulesEditor?.RefreshTargetsCommand.Execute(null);
 
                 MessageBox.Show(

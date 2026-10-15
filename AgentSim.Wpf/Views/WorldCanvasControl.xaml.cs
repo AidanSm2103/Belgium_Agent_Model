@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using AgentSim.Core.Agents;
-using AgentSim.Core.Worlds;
 using AgentSim.Core.Scripting;
+using AgentSim.Core.Worlds;
 
 namespace AgentSim.Wpf.Views
 {
@@ -22,27 +13,33 @@ namespace AgentSim.Wpf.Views
     {
         private World? _lastWorld;
 
-        // Deterministic species -> color mapping. No species names are
-        // hardcoded as special cases — any string gets consistently
-        // mapped to one of these colors via a hash, so it works for
-        // however many species a user actually creates.
-        private static readonly Brush[] SpeciesPalette =
-        {
-            Brushes.DodgerBlue,
-            Brushes.OrangeRed,
-            Brushes.MediumSeaGreen,
-            Brushes.MediumPurple,
-            Brushes.Goldenrod,
-            Brushes.DeepPink
-        };
+        // Heading marks double the number of shapes drawn each tick, so they
+        // are only drawn while the population is small enough to stay smooth.
+        private const int MaxAgentsForHeadingMarks = 400;
+
+        private static readonly Brush AgentOutline = Freeze(new SolidColorBrush(Color.FromArgb(200, 5, 7, 10)));
+        private static readonly Brush HeadingBrush = Freeze(new SolidColorBrush(Color.FromArgb(190, 255, 255, 255)));
+        private static readonly Brush WorldFrameBrush = Freeze(new SolidColorBrush(Color.FromRgb(0x3A, 0x43, 0x54)));
 
         public WorldCanvasControl()
         {
             InitializeComponent();
+
             SizeChanged += (s, e) =>
             {
+                // Rounded corners for the whole canvas, so patches never poke
+                // out of the card's rounded edge.
+                WorldCanvas.Clip = new RectangleGeometry(
+                    new Rect(0, 0, WorldCanvas.ActualWidth, WorldCanvas.ActualHeight), 8, 8);
+
                 if (_lastWorld != null) DrawWorld(_lastWorld);
             };
+        }
+
+        private static Brush Freeze(SolidColorBrush brush)
+        {
+            brush.Freeze();
+            return brush;
         }
 
         private void ClearCanvas()
@@ -50,59 +47,71 @@ namespace AgentSim.Wpf.Views
             WorldCanvas.Children.Clear();
         }
 
-        // Creates the visual representation of an agent
-        private Ellipse CreateAgentShape(Agent agent)
+        // Species colours come from SpeciesColors so the world, the live plot
+        // and the Monte Carlo charts always agree.
+        private static Brush FillFor(Agent agent)
         {
-            Brush fill;
-
             if (agent.Species != "Default")
             {
-                // Multi-species: color consistently by species name.
-                int index = Math.Abs(agent.Species.GetHashCode()) % SpeciesPalette.Length;
-                fill = SpeciesPalette[index];
-            }
-            else
-            {
-                // No species set: fall back to the original
-                // scripted-vs-default distinction from Milestone 2.
-                bool isScripted = agent.Behavior is ScriptedBehavior;
-                fill = isScripted ? Brushes.OrangeRed : Brushes.DodgerBlue;
+                return SpeciesColors.BrushFor(agent.Species);
             }
 
-            return new Ellipse
-            {
-                Width = 10,
-                Height = 10,
-                Fill = fill,
-                Stroke = Brushes.Black,
-                StrokeThickness = 1
-            };
+            // No species set: fall back to the original
+            // scripted-vs-default distinction from Milestone 2.
+            return agent.Behavior is ScriptedBehavior
+                ? SpeciesColors.ScriptedBrush
+                : SpeciesColors.DefaultBrush;
         }
 
         // Draws a single agent
-        private void DrawAgent(Agent agent, double scaleX, double scaleY)
+        private void DrawAgent(Agent agent, double scale, double offsetX, double offsetY, double diameter, bool headingMark)
         {
             if (agent == null || !agent.IsActive) return;
 
-            Ellipse ellipse = CreateAgentShape(agent);
+            var ellipse = new Ellipse
+            {
+                Width = diameter,
+                Height = diameter,
+                Fill = FillFor(agent),
+                Stroke = AgentOutline,
+                StrokeThickness = 1
+            };
 
-            double left = (agent.X * scaleX) - (ellipse.Width / 2);
-            double top = (agent.Y * scaleY) - (ellipse.Height / 2);
+            double cx = offsetX + agent.X * scale;
+            double cy = offsetY + agent.Y * scale;
 
-            Canvas.SetLeft(ellipse, left);
-            Canvas.SetTop(ellipse, top);
+            Canvas.SetLeft(ellipse, cx - diameter / 2);
+            Canvas.SetTop(ellipse, cy - diameter / 2);
             WorldCanvas.Children.Add(ellipse);
+
+            if (headingMark)
+            {
+                // Heading 0 = up, increasing clockwise.
+                double radians = agent.Heading * Math.PI / 180.0;
+                double reach = diameter * 0.5 + 3;
+
+                WorldCanvas.Children.Add(new Line
+                {
+                    X1 = cx,
+                    Y1 = cy,
+                    X2 = cx + Math.Sin(radians) * reach,
+                    Y2 = cy - Math.Cos(radians) * reach,
+                    Stroke = HeadingBrush,
+                    StrokeThickness = 1.5,
+                    StrokeEndLineCap = PenLineCap.Round
+                });
+            }
         }
 
-        // Draws the patch grid as colored background cells, brown (empty)
-        // to green (full) based on each patch's Value. Drawn BEFORE
-        // agents so agents stay visible on top.
-        private void DrawPatches(World world, double scaleX, double scaleY)
+        // Draws the patch grid as colored background cells, dark earth
+        // (empty) to rich green (full) based on each patch's Value. Drawn
+        // BEFORE agents so agents stay visible on top.
+        private void DrawPatches(World world, double scale, double offsetX, double offsetY)
         {
             if (world.Patches == null) return;
 
-            double cellWidth = (world.Width / world.Patches.GetLength(0)) * scaleX;
-            double cellHeight = (world.Height / world.Patches.GetLength(1)) * scaleY;
+            double cellWidth = (world.Width / world.Patches.GetLength(0)) * scale;
+            double cellHeight = (world.Height / world.Patches.GetLength(1)) * scale;
 
             foreach (var patch in world.Patches)
             {
@@ -111,20 +120,21 @@ namespace AgentSim.Wpf.Views
                 double max = world.PatchMaxValue;
                 double t = max > 0 ? Math.Clamp(patch.Value / max, 0.0, 1.0) : 0.0;
 
-                // Interpolate brown (0) -> green (100)
-                byte r = (byte)(139 + (34 - 139) * t);
-                byte g = (byte)(69 + (139 - 69) * t);
-                byte b = (byte)(19 + (34 - 19) * t);
+                // Interpolate dark earth (empty) -> deep green (full)
+                byte r = (byte)(36 + (26 - 36) * t);
+                byte g = (byte)(27 + (112 - 27) * t);
+                byte b = (byte)(22 + (62 - 22) * t);
 
                 var rect = new Rectangle
                 {
-                    Width = cellWidth,
-                    Height = cellHeight,
+                    // +0.5 closes the hairline gaps between neighbouring cells.
+                    Width = cellWidth + 0.5,
+                    Height = cellHeight + 0.5,
                     Fill = new SolidColorBrush(Color.FromRgb(r, g, b))
                 };
 
-                Canvas.SetLeft(rect, patch.X * scaleX);
-                Canvas.SetTop(rect, patch.Y * scaleY);
+                Canvas.SetLeft(rect, offsetX + patch.X * scale);
+                Canvas.SetTop(rect, offsetY + patch.Y * scale);
                 WorldCanvas.Children.Add(rect);
             }
         }
@@ -140,14 +150,35 @@ namespace AgentSim.Wpf.Views
             if (world.Width <= 0 || world.Height <= 0) return;
             if (WorldCanvas.ActualWidth <= 0 || WorldCanvas.ActualHeight <= 0) return;
 
-            double scaleX = WorldCanvas.ActualWidth / world.Width;
-            double scaleY = WorldCanvas.ActualHeight / world.Height;
+            EmptyHint.Visibility = Visibility.Collapsed;
 
-            DrawPatches(world, scaleX, scaleY);
+            // Keep the world's proportions: one scale for both axes, centred,
+            // instead of stretching a square world into a wide rectangle.
+            double scale = Math.Min(WorldCanvas.ActualWidth / world.Width, WorldCanvas.ActualHeight / world.Height);
+            double offsetX = (WorldCanvas.ActualWidth - world.Width * scale) / 2;
+            double offsetY = (WorldCanvas.ActualHeight - world.Height * scale) / 2;
+
+            DrawPatches(world, scale, offsetX, offsetY);
+
+            // Frame around the playable area, drawn over the patches.
+            var frame = new Rectangle
+            {
+                Width = world.Width * scale,
+                Height = world.Height * scale,
+                Stroke = WorldFrameBrush,
+                StrokeThickness = 1,
+                Fill = Brushes.Transparent
+            };
+            Canvas.SetLeft(frame, offsetX);
+            Canvas.SetTop(frame, offsetY);
+            WorldCanvas.Children.Add(frame);
+
+            double diameter = Math.Clamp(scale * 4.5, 7, 13);
+            bool headingMarks = world.Agents.Count <= MaxAgentsForHeadingMarks;
 
             foreach (Agent agent in world.Agents)
             {
-                DrawAgent(agent, scaleX, scaleY);
+                DrawAgent(agent, scale, offsetX, offsetY, diameter, headingMarks);
             }
         }
     }

@@ -40,15 +40,18 @@ namespace AgentSim.Wpf.Views
     // library is needed.
     internal static class ChartDrawing
     {
-        public static readonly Brush TextBrush = Frozen(Color.FromRgb(0x33, 0x33, 0x33));
-        public static readonly Brush GridBrush = Frozen(Color.FromRgb(0xE3, 0xE3, 0xE3));
-        public static readonly Brush AxisBrush = Frozen(Color.FromRgb(0x66, 0x66, 0x66));
-        public static readonly Brush PrimaryBrush = Frozen(Color.FromRgb(0x1F, 0x77, 0xB4));
-        public static readonly Brush SecondaryBrush = Frozen(Color.FromRgb(0xFF, 0x7F, 0x0E));
-        public static readonly Brush OtherBrush = Frozen(Color.FromRgb(0x99, 0x99, 0x99));
-        public static readonly Brush StartBrush = Frozen(Color.FromRgb(0xA9, 0xBC, 0xC9));
-        public static readonly Brush MeanBrush = Frozen(Color.FromRgb(0xC6, 0x28, 0x28));
-        public static readonly Brush PointBrush = Frozen(Color.FromArgb(170, 0x1F, 0x77, 0xB4));
+        // Colours for the dark theme. Species colours come from SpeciesColors;
+        // the gold accent matches the app theme.
+        public static readonly Brush TextBrush = Frozen(Color.FromRgb(0xC3, 0xCB, 0xD8));
+        public static readonly Brush GridBrush = Frozen(Color.FromRgb(0x23, 0x2A, 0x35));
+        public static readonly Brush AxisBrush = Frozen(Color.FromRgb(0x5A, 0x64, 0x75));
+        public static readonly Brush PrimaryBrush = Frozen(Color.FromRgb(0x4F, 0xC3, 0xF7));
+        public static readonly Brush SecondaryBrush = Frozen(Color.FromRgb(0xFF, 0x6B, 0x6B));
+        public static readonly Brush OtherBrush = Frozen(Color.FromRgb(0x7B, 0x85, 0x96));
+        public static readonly Brush StartBrush = Frozen(Color.FromRgb(0x59, 0x62, 0x73));
+        public static readonly Brush AccentBrush = Frozen(Color.FromRgb(0xFD, 0xDA, 0x24));
+        public static readonly Brush MeanBrush = Frozen(Color.FromRgb(0xEE, 0xF1, 0xF6));
+        public static readonly Brush PointBrush = Frozen(Color.FromArgb(200, 0xFD, 0xDA, 0x24));
 
         private static Brush Frozen(Color color)
         {
@@ -193,4 +196,3 @@ namespace AgentSim.Wpf.Views
         }
     }
 }
-
