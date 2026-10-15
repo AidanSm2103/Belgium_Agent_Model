@@ -54,11 +54,11 @@ namespace AgentSim.Wpf.Views
             var summary = _viewModel?.Summary;
             if (summary == null || summary.Trials.Count == 0)
             {
-                EmptyText.Visibility = Visibility.Visible;
+                EmptyPanel.Visibility = Visibility.Visible;
                 return;
             }
 
-            EmptyText.Visibility = Visibility.Collapsed;
+            EmptyPanel.Visibility = Visibility.Collapsed;
 
             DrawPopulationPerTrial(summary);
             DrawHistogram(summary);
@@ -77,6 +77,9 @@ namespace AgentSim.Wpf.Views
             var plot = ChartDrawing.BeginChart(canvas, "Final population per trial", "Trial", "Agents", yAxis, null);
             if (plot.IsEmpty) return;
 
+            var primaryBrush = SpeciesColors.BrushFor(summary.PrimarySpecies);
+            var secondaryBrush = SpeciesColors.BrushFor(summary.SecondarySpecies);
+
             double slot = plot.Width / trials.Count;
             double barWidth = Math.Max(1, slot * 0.8);
             double perAgent = plot.Height / (yAxis.Max - yAxis.Min);
@@ -90,8 +93,8 @@ namespace AgentSim.Wpf.Views
                 int other = Math.Max(0, t.FinalAgentCount - t.FinalPrimaryCount - t.FinalSecondaryCount);
                 var segments = new (int Count, System.Windows.Media.Brush Color)[]
                 {
-                    (t.FinalPrimaryCount, ChartDrawing.PrimaryBrush),
-                    (t.FinalSecondaryCount, ChartDrawing.SecondaryBrush),
+                    (t.FinalPrimaryCount, primaryBrush),
+                    (t.FinalSecondaryCount, secondaryBrush),
                     (other, ChartDrawing.OtherBrush)
                 };
 
@@ -116,8 +119,8 @@ namespace AgentSim.Wpf.Views
             ChartDrawing.AddText(canvas, $"mean {ChartDrawing.Format(summary.FinalTotal.Mean)}",
                 plot.Left + 4, meanY - 14, 10, ChartDrawing.MeanBrush);
 
-            var legend = new List<(string, System.Windows.Media.Brush)> { (summary.PrimarySpecies, ChartDrawing.PrimaryBrush) };
-            if (summary.HasSecondarySpecies) legend.Add((summary.SecondarySpecies, ChartDrawing.SecondaryBrush));
+            var legend = new List<(string, System.Windows.Media.Brush)> { (summary.PrimarySpecies, primaryBrush) };
+            if (summary.HasSecondarySpecies) legend.Add((summary.SecondarySpecies, secondaryBrush));
             ChartDrawing.AddLegend(canvas, plot, legend.ToArray());
         }
 
@@ -153,7 +156,7 @@ namespace AgentSim.Wpf.Views
                 double x1 = ToX(lo + (b + 1) * binWidth);
                 double top = ChartDrawing.MapY(plot, counts[b], yAxis);
 
-                ChartDrawing.AddRect(canvas, x0 + 1, top, Math.Max(1, x1 - x0 - 2), plot.Bottom - top, ChartDrawing.PrimaryBrush);
+                ChartDrawing.AddRect(canvas, x0 + 1, top, Math.Max(1, x1 - x0 - 2), plot.Bottom - top, ChartDrawing.AccentBrush);
                 if (counts[b] > 0)
                 {
                     ChartDrawing.AddText(canvas, counts[b].ToString(), (x0 + x1) / 2, top - 14, 10, null, centered: true);
@@ -228,11 +231,11 @@ namespace AgentSim.Wpf.Views
 
             var groups = new List<(string Label, double StartMean, SeriesStats Final, System.Windows.Media.Brush Color)>
             {
-                (summary.PrimarySpecies, trials.Average(t => t.StartPrimaryCount), summary.FinalPrimary, ChartDrawing.PrimaryBrush)
+                (summary.PrimarySpecies, trials.Average(t => t.StartPrimaryCount), summary.FinalPrimary, SpeciesColors.BrushFor(summary.PrimarySpecies))
             };
             if (summary.HasSecondarySpecies)
             {
-                groups.Add((summary.SecondarySpecies, trials.Average(t => t.StartSecondaryCount), summary.FinalSecondary, ChartDrawing.SecondaryBrush));
+                groups.Add((summary.SecondarySpecies, trials.Average(t => t.StartSecondaryCount), summary.FinalSecondary, SpeciesColors.BrushFor(summary.SecondarySpecies)));
                 groups.Add(("Total", summary.StartTotal.Mean, summary.FinalTotal, ChartDrawing.OtherBrush));
             }
 
@@ -271,8 +274,7 @@ namespace AgentSim.Wpf.Views
 
             ChartDrawing.AddLegend(canvas, plot,
                 ("Mean start", ChartDrawing.StartBrush),
-                ("Mean final", ChartDrawing.PrimaryBrush));
+                ("Mean final", SpeciesColors.BrushFor(summary.PrimarySpecies)));
         }
     }
 }
-

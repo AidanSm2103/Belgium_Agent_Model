@@ -62,6 +62,46 @@ namespace AgentSim.Wpf.ViewModels
             private set { _summary = value; OnPropertyChanged(); }
         }
 
+        // Headline numbers shown as tiles above the detailed text.
+        public bool HasResults => Summary != null;
+
+        private string _meanFinalText = "-";
+        public string MeanFinalText
+        {
+            get => _meanFinalText;
+            private set { _meanFinalText = value; OnPropertyChanged(); }
+        }
+
+        private string _ciText = "-";
+        public string CiText
+        {
+            get => _ciText;
+            private set { _ciText = value; OnPropertyChanged(); }
+        }
+
+        private string _survivalText = "-";
+        public string SurvivalText
+        {
+            get => _survivalText;
+            private set { _survivalText = value; OnPropertyChanged(); }
+        }
+
+        private string _correlationText = "-";
+        public string CorrelationText
+        {
+            get => _correlationText;
+            private set { _correlationText = value; OnPropertyChanged(); }
+        }
+
+        private void UpdateTiles(MonteCarloSummary s)
+        {
+            MeanFinalText = s.FinalTotal.Mean.ToString("F1");
+            CiText = $"{s.FinalTotal.CiLow:F1} to {s.FinalTotal.CiHigh:F1}";
+            SurvivalText = s.SurvivalRate.Mean.ToString("P0");
+            CorrelationText = s.StartFinalCorrelation.ToString("F2");
+            OnPropertyChanged(nameof(HasResults));
+        }
+
         // Raised on the UI thread after a run finishes successfully, so the
         // main window can switch to the charts tab.
         public event Action? RunCompleted;
@@ -126,6 +166,7 @@ namespace AgentSim.Wpf.ViewModels
 
                 ResultsSummaryText = BuildSummaryText(summary, scriptsLine);
                 Summary = summary;
+                UpdateTiles(summary);
                 succeeded = true;
             }
             catch (Exception ex)

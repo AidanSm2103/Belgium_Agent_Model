@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="700">
-    <Grid Margin="5" Background="White">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
@@ -15,23 +15,40 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="0" Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="1" Margin="3">
+        <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,6,12" Padding="4">
             <Canvas x:Name="PopulationCanvas" ClipToBounds="True"/>
         </Border>
-        <Border Grid.Row="0" Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="1" Margin="3">
+        <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,12" Padding="4">
             <Canvas x:Name="HistogramCanvas" ClipToBounds="True"/>
         </Border>
-        <Border Grid.Row="1" Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="1" Margin="3">
+        <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,6,0" Padding="4">
             <Canvas x:Name="ScatterCanvas" ClipToBounds="True"/>
         </Border>
-        <Border Grid.Row="1" Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="1" Margin="3">
+        <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,0" Padding="4">
             <Canvas x:Name="GroupsCanvas" ClipToBounds="True"/>
         </Border>
 
-        <TextBlock x:Name="EmptyText"
-                   Grid.RowSpan="2" Grid.ColumnSpan="2"
-                   Text="Run Monte Carlo (left panel) to see charts here."
-                   FontSize="14" Foreground="Gray"
-                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <!-- Shown until the first Monte Carlo run finishes -->
+        <Border x:Name="EmptyPanel"
+                Grid.RowSpan="2" Grid.ColumnSpan="2"
+                Style="{StaticResource Card}" Margin="0">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- Little bar-chart illustration drawn with plain shapes -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Height="52">
+                    <Border Width="12" Height="22" VerticalAlignment="Bottom" CornerRadius="3" Margin="3,0" Background="{StaticResource LineStrongBrush}"/>
+                    <Border Width="12" Height="38" VerticalAlignment="Bottom" CornerRadius="3" Margin="3,0" Background="{StaticResource LineStrongBrush}"/>
+                    <Border Width="12" Height="52" VerticalAlignment="Bottom" CornerRadius="3" Margin="3,0" Background="{StaticResource GoldBrush}"/>
+                    <Border Width="12" Height="30" VerticalAlignment="Bottom" CornerRadius="3" Margin="3,0" Background="{StaticResource LineStrongBrush}"/>
+                    <Border Width="12" Height="16" VerticalAlignment="Bottom" CornerRadius="3" Margin="3,0" Background="{StaticResource LineStrongBrush}"/>
+                </StackPanel>
+                <TextBlock Text="No Monte Carlo results yet"
+                           FontSize="17" FontWeight="SemiBold"
+                           Margin="0,14,0,4" HorizontalAlignment="Center"/>
+                <TextBlock Text="Run a batch from the Monte Carlo panel on the left and four charts will appear here."
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>
