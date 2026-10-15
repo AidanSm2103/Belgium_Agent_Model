@@ -29,11 +29,14 @@ Development is feature-complete. Remaining work going forward is limited to bug 
 | Script safety checks + execution timeout | ✅ |
 | In-app rules editor, with an expandable full-size view | ✅ |
 | Configurable patch grid (size, starting value, regrowth) — readable/writable, rendered live on the canvas | ✅ |
-| Live plot + monitors (ticks, agent count) | ✅ |
+| Live plot + monitors (ticks, agent count, species breakdown, patch health) | ✅ |
 | Agent rendering reflects species and active behavior | ✅ |
 | Safe runtime spawn/kill of agents from scripts | ✅ |
 | Multi-species agent support, with per-species script targeting | ✅ |
 | Monte Carlo batch simulation with statistical summaries + CSV export | ✅ |
+| Monte Carlo start-count variance and per-species statistics | ✅ |
+| Monte Carlo charts (final population, distribution, start vs final, per-species comparison) | ✅ |
+| Themed, polished interface (Belgian tricolour dark theme) | ✅ |
 | Save / load simulation configuration and scripts | ✅ |
 | Reusable library packaging + standalone console demo | ✅ |
 
@@ -43,9 +46,11 @@ Development is feature-complete. Remaining work going forward is limited to bug 
 - **Scripts run safely.** A lightweight denylist blocks obviously unsafe operations (file/network/process access), and any script that hangs is timed out rather than freezing the simulation. Agents can safely spawn or remove other agents from within a script.
 - **Multiple interacting agent types.** Agents can be split into two named species groups at setup, and a script can be applied to a single species rather than always affecting everyone — enabling predator/prey-style and other multi-agent interaction scenarios.
 - **A real, visible environment.** The world has a patch grid agents and scripts can read from and write to, rendered live as a colored grid behind the agents. Grid size, starting value, and regrowth time are all configurable: an emptied patch (value 0) can regrow to its full value after a set number of ticks, or never if regrowth is turned off.
-- **Statistical analysis.** A Monte Carlo panel runs the simulation many times over with varying random seeds, using the same settings and the same scripts you have applied to the simulation on screen. It reports mean/standard deviation/min/max of the final living agent count across trials, with CSV export for external analysis.
+- **Statistical analysis.** A Monte Carlo panel runs the simulation many times over with varying random seeds, using the same settings and the same scripts you have applied to the simulation on screen. A **start count variance** setting (a percentage) makes each trial begin with a slightly different number of agents (for example 10% of 30 gives 27 to 33), varied per species group and reproducible from the seed. It reports the mean, median, standard deviation, standard error, 95% confidence interval and min/max of the final living agent count across trials, plus per-species totals, survival rate, mean final patch value, and the correlation between starting and final population.
+- **Monte Carlo charts and CSV export.** After a run, a **Monte Carlo Charts** tab shows four charts: final population per trial (stacked by species), a histogram of final populations, starting versus final population per trial, and mean start versus mean final per species with 95% confidence intervals. CSV export writes two files: one row per trial (start and final counts in total and per species, net change, survival rate, final mean patch value), and a `_summary.csv` beside it with the statistics. Numbers always use a `.` decimal point, so the files open correctly in any regional setting.
 - **Save and resume.** A save file captures the whole simulation: settings, species groups, every agent's position and behavior, patch values, the tick count, and the scripts you applied. Loading puts you back where you left off with the scripts still active. Files saved by earlier versions (settings only) still load, and start a fresh Setup.
-- **Live feedback.** A plot tracks agent count over time alongside tick/agent monitors, updating every tick.
+- **Live feedback.** A plot tracks population over time, one line per species, alongside a live stat strip (ticks, agents alive, count by species, patch health), updating every tick.
+- **A finished look.** A dark theme built on the Belgian tricolour (black, yellow and red), with a status header, card-based side panel, and species colours shared between the world, the live plot, and the Monte Carlo charts.
 - **Genuinely reusable.** `AgentSim.Core` has zero UI dependencies and ships with a standalone console demo proving it runs headlessly end to end — simulation, scripting, and Monte Carlo included.
 
 ## 🏗️ Architecture
@@ -66,8 +71,10 @@ AgentSim.Core/              Simulation engine — no UI dependencies
 └── Utilities/                  RandomProvider (seeded RNG)
 
 AgentSim.Wpf/                WPF front end (MVVM)
+├── Themes/                    Theme.xaml (colours, control styles)
 ├── Views/                     MainWindow, WorldCanvasControl, RulesEditorControl,
-│                              PlotControl, MonteCarloControl
+│                              PlotControl, MonteCarloControl,
+│                              MonteCarloChartsControl, ChartDrawing, SpeciesColors
 ├── ViewModels/                 MainViewModel, SimulationViewModel,
 │                              RulesEditorViewModel, MonteCarloViewModel
 └── Helpers/                    RelayCommand, ViewModelBase
@@ -91,16 +98,16 @@ AgentSim.ConsoleDemo/         Standalone console app — proves AgentSim.Core ru
 
 ## ✍️ Using the app
 
-1. Click **Setup** to spawn agents. Optionally configure a second species group first (primary/secondary species names and secondary group count) under **Species Groups**, and the patch grid (size, starting value, regrowth time) under **Patches**. Both are applied on Setup.
+1. Click **Setup** to spawn agents. Optionally configure a second species group first (primary/secondary species names and secondary group count) under **Population**, and the patch grid (size, starting value, regrowth time) under **Environment**. Both are applied on Setup.
 2. In the rules editor, write a script using `Agent`, `World`, `Rng`, and `Engine` (for safe spawn/kill). Use the expand button to open a larger editing view if needed.
 3. Choose who the script applies to under **Apply to** — `All`, or a specific species group — then click **Apply Behavior**.
-4. Click **Go** to run continuously, or **Step** to advance one tick at a time. Ticks, agent count, and a live plot update as it runs.
+4. Click **Go** to run continuously, or **Step** to advance one tick at a time. Ticks, agent count, species breakdown, patch health, and a live plot update as it runs.
 5. Use **Save**/**Load** to store or restore the current settings, species groups, and script.
-6. Open the **Monte Carlo** panel to run many independent trials and view aggregated statistics, with an option to export results to CSV.
+6. Open the **Monte Carlo** panel, set the trial count, ticks per trial and start count variance, then run many independent trials. The statistics appear in the panel and the charts open in the **Monte Carlo Charts** tab; use **CSV** to export the per-trial data and a summary file.
 
 ## 🧪 Running the tests
 
-Open **Test Explorer** (Test menu → Test Explorer) and run all tests, or `Test → Run All Tests`. Coverage includes the simulation engine, world, agents, random number provider, the full scripting pipeline (compile, safety checks, timeout handling, apply), Monte Carlo statistics and determinism, multi-species behavior targeting, patch configuration and regrowth, and save/load persistence.
+Open **Test Explorer** (Test menu → Test Explorer) and run all tests, or `Test → Run All Tests`. Coverage includes the simulation engine, world, agents, random number provider, the full scripting pipeline (compile, safety checks, timeout handling, apply), Monte Carlo statistics, start-count variance, CSV export and determinism, multi-species behavior targeting, patch configuration and regrowth, and save/load persistence.
 
 ## 📦 Using AgentSim.Core as a library
 
@@ -131,8 +138,3 @@ dotnet run --project AgentSim.ConsoleDemo
 
 Built by a 7-person team split across simulation engine, rendering, UI/control panel, scripting, and QA/DevOps.
 
-## 🌿 Branching
-
-- `master` — stable, the current release
-- `dev` — integration branch for ongoing bug fixes; merges into `master` once changes are verified
-- `feature/*` / `bugfix/*` — individual work branches, merged via reviewed pull requests
