@@ -4,131 +4,401 @@
         xmlns:views="clr-namespace:AgentSim.Wpf.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:AgentSim.Wpf"
         mc:Ignorable="d"
-        Title="Belgium Agent Model (BAM)" Height="600" Width="1000">
-
-    <Window.Resources>
-
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#0078D7"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                            CornerRadius="5" 
-                            Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#005A9E"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#CCCCCC"/>
-                                <Setter Property="Foreground" Value="#888888"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Foreground" Value="#333333"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
-    </Window.Resources>
+        Title="Belgium Agent Model (BAM)"
+        Height="840" Width="1380"
+        MinHeight="720" MinWidth="1180"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontSize="13"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <!-- Left panel wrapped in a ScrollViewer so the growing list of
-             controls (scripting, save/load, Monte Carlo) never overflows
-             the window — it scrolls instead. -->
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="15" Background="#F5F5F5">
-                <TextBlock Text="Simulation Controls" FontWeight="Bold" FontSize="16" Margin="0,0,0,15" />
+        <!-- Soft golden glow behind the header -->
+        <Rectangle Grid.RowSpan="3" Height="280" VerticalAlignment="Top"
+                   Fill="{StaticResource GlowBrush}" IsHitTestVisible="False"/>
 
-                <Button Content="Setup" Command="{Binding Simulation.SetupCommand}" Margin="0,5" Padding="5"/>
-                <Button Content="Step" Command="{Binding Simulation.StepCommand}" Margin="0,5" Padding="5"/>
-                <Button Content="Go / Stop" Command="{Binding Simulation.GoCommand}" Margin="0,5" Padding="5"/>
+        <!-- Belgian tricolour band across the very top of the window -->
+        <Rectangle Grid.Row="0" Fill="{StaticResource TricolourBrush}"/>
 
-                <Separator Margin="0,15" />
-
-                <TextBlock Text="{Binding Simulation.AgentCount, StringFormat='Agent Count: {0}'}" />
-                <Slider Minimum="10" Maximum="1000" Value="{Binding Simulation.AgentCount}" TickFrequency="10" IsSnapToTickEnabled="True" Margin="0,5,0,15" />
-
-                <Separator Margin="0,15" />
-
-                <TextBlock Text="Species Groups" FontWeight="Bold" Margin="0,0,0,10" />
-                <TextBlock Text="Primary species name:"/>
-                <TextBox Text="{Binding Simulation.PrimaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                <TextBlock Text="Secondary group count (0 = single species):"/>
-                <TextBox Text="{Binding Simulation.SecondaryGroupCount, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                <TextBlock Text="Secondary species name:"/>
-                <TextBox Text="{Binding Simulation.SecondaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
-                <TextBlock Text="Click Setup to apply group changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
-
-                <Separator Margin="0,15" />
-
-                <TextBlock Text="Patches" FontWeight="Bold" Margin="0,0,0,10" />
-                <TextBlock Text="Grid columns (1-50):"/>
-                <TextBox Text="{Binding Simulation.PatchColumns, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                <TextBlock Text="Grid rows (1-50):"/>
-                <TextBox Text="{Binding Simulation.PatchRows, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                <TextBlock Text="Starting value (also the regrow-to value):"/>
-                <TextBox Text="{Binding Simulation.PatchInitialValue, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                <TextBlock Text="Regrowth time in ticks (0 = never regrow):"/>
-                <TextBox Text="{Binding Simulation.PatchRegrowthTicks, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,5"/>
-                <TextBlock Text="Click Setup to apply patch changes." FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,0,0,5"/>
-
-                <Separator Margin="0,15" />
-
-                <TextBlock Text="Save / Load" FontWeight="Bold" Margin="0,0,0,10" />
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="Save" Command="{Binding Simulation.SaveCommand}" Margin="0,0,5,0" Padding="5" Width="90"/>
-                    <Button Content="Load" Command="{Binding Simulation.LoadCommand}" Padding="5" Width="90"/>
+        <!-- ===================== HEADER ===================== -->
+        <Grid Grid.Row="1" Margin="24,16,24,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Logo badge: tricolour ring around a dark core -->
+                <Border Width="48" Height="48" CornerRadius="13"
+                        Background="{StaticResource TricolourBrush}" Margin="0,0,14,0">
+                    <Border Margin="4" CornerRadius="10" Background="{StaticResource BgBrush}">
+                        <TextBlock Text="BAM" FontSize="13" FontWeight="ExtraBold"
+                                   Foreground="{StaticResource GoldBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Belgium Agent Model" FontSize="22" FontWeight="SemiBold"/>
+                    <TextBlock Text="Agent-based modelling studio  ·  Belgium Campus"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
                 </StackPanel>
-
-                <Separator Margin="0,15" />
-
-                <views:RulesEditorControl DataContext="{Binding RulesEditor}" Height="250" Margin="0,0,0,0" />
-
-                <Separator Margin="0,15" />
-
-                <views:MonteCarloControl DataContext="{Binding MonteCarlo}" />
             </StackPanel>
-        </ScrollViewer>
 
-        <Grid Grid.Column="1" Margin="15">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="2*"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0"
-                    BorderBrush="Black"
-                    BorderThickness="1"
-                    Margin="0,0,0,10">
-                <views:WorldCanvasControl x:Name="WorldCanvasCtrl"/>
-            </Border>
-
-            <Border Grid.Row="1"
-                    BorderBrush="Black"
-                    BorderThickness="1">
-                <views:PlotControl x:Name="PlotCtrl"/>
+            <!-- Live status pill -->
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource LineBrush}"
+                    BorderThickness="1" CornerRadius="18" Padding="14,7">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="10" Height="10" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource TextMutedBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Simulation.IsRunning}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource SuccessBrush}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="PulseStoryboard">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1" To="0.25" Duration="0:0:0.7"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="PulseStoryboard"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding Simulation.StatusText}" FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
             </Border>
         </Grid>
+
+        <!-- ===================== BODY ===================== -->
+        <Grid Grid.Row="2" Margin="24,4,24,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- SIDEBAR -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,8,0">
+
+                    <!-- Simulation controls -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE768;"/>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Simulation"/>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" Command="{Binding Simulation.SetupCommand}"
+                                        ToolTip="Rebuild the world using the settings below">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE72C;"
+                                                   Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Setup" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Grid.Column="2" Command="{Binding Simulation.StepCommand}"
+                                        ToolTip="Advance the simulation by one tick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE76C;"
+                                                   Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Step" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Grid.Column="4" Command="{Binding Simulation.GoCommand}"
+                                        ToolTip="Run continuously, or pause">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Simulation.IsRunning}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource RedBrush}"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource IconFont}"
+                                                   Margin="0,0,7,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="&#xE768;"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Simulation.IsRunning}" Value="True">
+                                                            <Setter Property="Text" Value="&#xE769;"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Go"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Simulation.IsRunning}" Value="True">
+                                                            <Setter Property="Text" Value="Stop"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Setup rebuilds the world from the settings below. Go runs it live; Step advances one tick."/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Population -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE716;"/>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Population"/>
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="Agent count" Margin="0"
+                                           VerticalAlignment="Center"/>
+                                <Border HorizontalAlignment="Right" Background="{StaticResource GoldDimBrush}"
+                                        CornerRadius="6" Padding="10,2">
+                                    <TextBlock Text="{Binding Simulation.AgentCount}"
+                                               Foreground="{StaticResource GoldBrush}" FontWeight="SemiBold"/>
+                                </Border>
+                            </Grid>
+                            <Slider Minimum="10" Maximum="1000" Value="{Binding Simulation.AgentCount}"
+                                    TickFrequency="10" IsSnapToTickEnabled="True" Margin="0,0,0,16"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Primary species"/>
+                                    <TextBox Text="{Binding Simulation.PrimaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Secondary species"/>
+                                    <TextBox Text="{Binding Simulation.SecondaryGroupSpecies, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource FieldLabel}" Margin="0,12,0,4"
+                                       Text="Secondary group size (0 = single species)"/>
+                            <TextBox Text="{Binding Simulation.SecondaryGroupCount, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBlock Style="{StaticResource Hint}" Text="Click Setup to apply population changes."/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Environment -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE774;"/>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Environment"/>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="12"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Grid columns (1-50)"/>
+                                    <TextBox Text="{Binding Simulation.PatchColumns, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Grid rows (1-50)"/>
+                                    <TextBox Text="{Binding Simulation.PatchRows, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Start value"
+                                               ToolTip="Also the value an emptied patch regrows to"/>
+                                    <TextBox Text="{Binding Simulation.PatchInitialValue, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Regrow (ticks)"
+                                               ToolTip="0 = patches never regrow"/>
+                                    <TextBox Text="{Binding Simulation.PatchRegrowthTicks, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="Regrow 0 means patches never recover. Click Setup to apply environment changes."/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Scripting -->
+                    <Border Style="{StaticResource Card}">
+                        <views:RulesEditorControl DataContext="{Binding RulesEditor}" Height="380"/>
+                    </Border>
+
+                    <!-- Monte Carlo -->
+                    <Border Style="{StaticResource Card}">
+                        <views:MonteCarloControl DataContext="{Binding MonteCarlo}"/>
+                    </Border>
+
+                    <!-- Save / load -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <TextBlock Style="{StaticResource CardIcon}" Text="&#xE74E;"/>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Session"/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Command="{Binding Simulation.SaveCommand}"
+                                        ToolTip="Save the whole simulation, including applied scripts">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE74E;"
+                                                   Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Save" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Command="{Binding Simulation.LoadCommand}"
+                                        ToolTip="Load a saved simulation">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE838;"
+                                                   Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Load" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- MAIN VIEW -->
+            <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+
+                <TabItem Header="Live Simulation">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="230"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Live stat strip -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Style="{StaticResource StatTile}" MinWidth="120">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource StatLabel}" Text="TICKS"/>
+                                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding Simulation.TickCount}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource StatTile}" MinWidth="120">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource StatLabel}" Text="AGENTS ALIVE"/>
+                                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding Simulation.LiveAgentCount}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="4" Style="{StaticResource StatTile}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource StatLabel}" Text="BY SPECIES"/>
+                                    <TextBlock Text="{Binding Simulation.SpeciesBreakdown}"
+                                               FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0" Foreground="{StaticResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="6" Style="{StaticResource StatTile}" MinWidth="120">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource StatLabel}" Text="PATCH HEALTH"/>
+                                    <TextBlock Style="{StaticResource StatValue}" Foreground="{StaticResource SuccessBrush}"
+                                               Text="{Binding Simulation.PatchHealthText}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- World -->
+                        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="8">
+                            <views:WorldCanvasControl x:Name="WorldCanvasCtrl"/>
+                        </Border>
+
+                        <!-- Population plot -->
+                        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0" Padding="14">
+                            <views:PlotControl x:Name="PlotCtrl"/>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Monte Carlo Charts">
+                    <views:MonteCarloChartsControl DataContext="{Binding MonteCarlo}"/>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <!-- ===================== STATUS BAR ===================== -->
+        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="24,0" Height="32">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Simulation.StatusText}" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Text="  ·  Tick " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding Simulation.TickCount}" FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="  ·  " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding Simulation.LiveAgentCount}" FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text=" Agents" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

@@ -10,6 +10,14 @@ namespace AgentSim.Wpf.ViewModels
         public RulesEditorViewModel RulesEditor { get; }
         public MonteCarloViewModel MonteCarlo { get; }
 
+        // 0 = live simulation, 1 = Monte Carlo charts.
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set { _selectedTabIndex = value; OnPropertyChanged(); }
+        }
+
         public MainViewModel()
         {
             Simulation = new SimulationViewModel();
@@ -24,6 +32,9 @@ namespace AgentSim.Wpf.ViewModels
             MonteCarlo = new MonteCarloViewModel(
                 () => Simulation.Engine.Settings,
                 () => Simulation.Engine.ScriptAssignments.ToList());
+
+            // Jump to the charts as soon as a run finishes.
+            MonteCarlo.RunCompleted += () => SelectedTabIndex = 1;
         }
     }
 }

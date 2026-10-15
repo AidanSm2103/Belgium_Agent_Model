@@ -4,45 +4,35 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="300"
-             d:DesignWidth="500">
-
-    <Grid Background="White">
-
+             d:DesignHeight="230"
+             d:DesignWidth="700">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0"
-                    Orientation="Horizontal"
-                    Margin="10">
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="3" Height="16" CornerRadius="2"
+                        Background="{StaticResource GoldBrush}" Margin="0,0,10,0"/>
+                <TextBlock Style="{StaticResource CardTitle}" Text="Population over time" Foreground="{StaticResource TextPrimaryBrush}"/>
+            </StackPanel>
 
-            <TextBlock Text="Ticks: "
-                       FontWeight="Bold"/>
+            <!-- One entry per species, filled in by the code-behind -->
+            <StackPanel x:Name="LegendPanel"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"/>
+        </Grid>
 
-            <TextBlock x:Name="TickCountText"
-                       Text="0"
-                       Margin="0,0,20,0"/>
+        <Canvas x:Name="PlotCanvas" Grid.Row="1" ClipToBounds="True"/>
 
-            <TextBlock Text="Agents: "
-                       FontWeight="Bold"/>
-
-            <TextBlock x:Name="AgentCountText"
-                       Text="0"/>
-
-        </StackPanel>
-
-        <Border Grid.Row="1"
-                Margin="10"
-                BorderBrush="Gray"
-                BorderThickness="1">
-
-            <Canvas x:Name="PlotCanvas"
-                    Background="White"/>
-
-        </Border>
-
+        <TextBlock x:Name="EmptyText" Grid.Row="1"
+                   Text="The population plot appears once the simulation is running."
+                   Foreground="{StaticResource TextMutedBrush}"
+                   FontSize="12"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   IsHitTestVisible="False"/>
     </Grid>
-
 </UserControl>
