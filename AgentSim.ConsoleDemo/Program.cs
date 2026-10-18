@@ -4,7 +4,7 @@ using AgentSim.Core.Scripting;
 using AgentSim.Core.Simulation;
 using System.Linq;
 
-Console.WriteLine("=== AgentSim Studio — Console Demo (Core library, no UI) ===\n");
+Console.WriteLine("=== Belgium Agent Model — Console Demo (Core library, no UI) ===\n");
 
 // DEMO 1: Headless Setup/Tick loop
 Console.WriteLine("--- Demo 1: Headless Setup/Tick loop ---");
@@ -62,6 +62,7 @@ var mcSettings = new MonteCarloSettings
     TrialCount = 20,
     TicksPerTrial = 100,
     BaseSeed = 12345,
+    StartCountVariancePercent = 10,
     BaseSettings = new SimulationSettings
     {
         AgentCount = 30,
@@ -79,6 +80,9 @@ Console.WriteLine($"Min: {summary.MinFinalAgentCount}  Max: {summary.MaxFinalAge
 
 var csvPath = Path.Combine(Directory.GetCurrentDirectory(), "montecarlo_results.csv");
 ResultsExporter.ExportToCsv(summary, csvPath);
+Console.WriteLine($"Mean start: {summary.StartTotal.Mean:F1}  95% CI of final: {summary.FinalTotal.CiLow:F1} to {summary.FinalTotal.CiHigh:F1}");
+Console.WriteLine($"Start/final correlation: {summary.StartFinalCorrelation:F2}");
+ResultsExporter.ExportSummaryToCsv(summary, Path.Combine(Directory.GetCurrentDirectory(), "montecarlo_summary.csv"));
 Console.WriteLine($"Exported results to {csvPath}");
 
 // OPTIONAL DEMO: Multi-species demo — two groups, two different scripts, headless
