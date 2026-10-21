@@ -7,60 +7,64 @@ using AgentSim.Core.Utilities;
 using AgentSim.Core.Worlds;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace AgentSim.Core.Scripting;
-
-public class ScriptedBehavior : IAgentBehavior
+namespace AgentSim.Core.Scripting
 {
-    private readonly Script<object> _script;
-
-    // Compiled once into a plain delegate. Calling it is just a method call,
-    // instead of building a new script-run object for every agent every tick.
-    private readonly ScriptRunner<object> _runner;
-
-    private static readonly TimeSpan Timeout = TimeSpan.FromMilliseconds(50);
-
-    // Only the dry-run (BehaviorTestRunner) uses the thread + timeout guard,
-    // because that is where a brand-new, untrusted script runs for the first
-    // time (an infinite loop must not freeze the app). After it has passed,
-    // normal ticks run the script directly on the calling thread.
-    public bool UseTimeoutGuard { get; set; }
-
-    public ScriptedBehavior(Script<object> script)
+    // Wraps a compiled Roslyn script so it can be used anywhere a normal IAgentBehavior is expected
+    public class ScriptedBehavior : IAgentBehavior
     {
-        _script = script;
-        _runner = script.CreateDelegate();
-    }
+        private readonly Script<object> _script;
 
-    public void Execute(Agent agent, World world, RandomProvider rng, SimulationEngine engine)
-    {
-        var globals = new ScriptGlobals { Agent = agent, World = world, Rng = rng, Engine = engine };
+        // Compiled once into a plain delegate: calling it is a normal method
+        // call instead of building a new script run per agent per tick.
+        private readonly ScriptRunner<object> _runner;
 
-        try
+        // A script slower than this deactivates its agent.
+        private static readonly TimeSpan Timeout = TimeSpan.FromMilliseconds(50);
+
+        // The C# text this behavior was compiled from. Kept so a saved
+        // simulation can recompile the same behavior when it is loaded.
+        public string SourceCode { get; }
+
+        // Only the first test run of a new script (BehaviourTestRunner) uses
+        // the thread + timeout guard, so an infinite loop can't freeze the app.
+        // Normal ticks run the script directly on the calling thread.
+        public bool UseTimeoutGuard { get; set; }
+
+        public ScriptedBehavior(Script<object> script, string sourceCode = "")
         {
-            if (UseTimeoutGuard)
+            _script = script;
+            _runner = script.CreateDelegate();
+            SourceCode = sourceCode;
+        }
+
+        public void Execute(Agent agent, World world, RandomProvider rng, SimulationEngine engine)
+        {
+            var globals = new ScriptGlobals { Agent = agent, World = world, Rng = rng, Engine = engine };
+            try
             {
-                var task = Task.Run(() => _runner(globals));
-                if (!task.Wait(TimeSpan.FromMilliseconds(500)) || task.IsFaulted)
+                if (UseTimeoutGuard)
+                {
+                    var task = Task.Run(() => _runner(globals));
+                    if (!task.Wait(TimeSpan.FromMilliseconds(500)) || task.IsFaulted)
+                    {
+                        agent.IsActive = false;
+                    }
+                    return;
+                }
+
+                long start = Stopwatch.GetTimestamp();
+                _runner(globals).GetAwaiter().GetResult();
+
+                if (Stopwatch.GetElapsedTime(start) > Timeout)
                 {
                     agent.IsActive = false;
                 }
-                return;
             }
-
-            long start = Stopwatch.GetTimestamp();
-
-            // Scripts have no 'await', so this finishes synchronously.
-            _runner(globals).GetAwaiter().GetResult();
-
-            // Still switch off an agent whose script is far too slow.
-            if (Stopwatch.GetElapsedTime(start) > Timeout)
+            catch (Exception)
             {
+                // Deactivate this agent rather than crash the simulation.
                 agent.IsActive = false;
             }
-        }
-        catch (Exception)
-        {
-            agent.IsActive = false;
         }
     }
 }
