@@ -158,12 +158,18 @@ namespace AgentSim.Wpf.Views
                 }
             }
 
+            // Fix the drawing's bounds to the canvas. Without this, agents near
+            // the edge stick out past it, the bounds change every tick, and
+            // the Image re-aligns itself, which made the world jump up and down.
+            group.ClipGeometry = new RectangleGeometry(
+                new Rect(0, 0, WorldCanvas.ActualWidth, WorldCanvas.ActualHeight));
+
             var image = new Image
             {
                 Source = new DrawingImage(group),
                 Width = WorldCanvas.ActualWidth,
                 Height = WorldCanvas.ActualHeight,
-                Stretch = Stretch.None
+                Stretch = Stretch.Fill
             };
             WorldCanvas.Children.Add(image);
         }
