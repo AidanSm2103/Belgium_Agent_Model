@@ -35,6 +35,14 @@ namespace AgentSim.Core.Worlds
         //Removes an agent from the world
         public void RemoveAgent(Agent agent) => _agents.Remove(agent);
 
+        // One pass over the list instead of one O(N) Remove per agent.
+        public void RemoveAgents(System.Collections.Generic.ICollection<Agent> agents)
+        {
+            if (agents.Count == 0) return;
+            var set = new System.Collections.Generic.HashSet<Agent>(agents);
+            _agents.RemoveAll(set.Contains);
+        }
+
         //Removes all agents from the world
         public void Clear() => _agents.Clear();
 

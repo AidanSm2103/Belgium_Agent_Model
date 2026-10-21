@@ -1,5 +1,6 @@
 ﻿using AgentSim.Core.Persistence;
 using AgentSim.Core.Simulation;
+using AgentSim.Wpf.Views;
 using Microsoft.Win32;
 using System;
 using System.Linq;
@@ -150,6 +151,8 @@ namespace AgentSim.Wpf.ViewModels
         public void SetRulesEditor(RulesEditorViewModel rulesEditor)
         {
             _rulesEditor = rulesEditor;
+            _rulesEditor.SpeciesSource = () => (PrimaryGroupSpecies, SecondaryGroupSpecies, SecondaryGroupCount);
+            _rulesEditor.RefreshTargetsCommand.Execute(null);
         }
 
         public SimulationViewModel()
@@ -284,19 +287,11 @@ namespace AgentSim.Wpf.ViewModels
             {
                 SimulationPersistence.Save(data, dialog.FileName);
 
-                MessageBox.Show(
-                    "Simulation saved successfully.",
-                    "Save Simulation",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                Dialogs.Success("Simulation saved successfully.", "Save Simulation");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Could not save the simulation.\n\n{ex.Message}",
-                    "Save Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                Dialogs.Error($"Could not save the simulation.\n\n{ex.Message}", "Save Error");
             }
         }
 
@@ -317,11 +312,7 @@ namespace AgentSim.Wpf.ViewModels
 
                 if (data == null)
                 {
-                    MessageBox.Show(
-                        "The selected save file is missing or corrupted.",
-                        "Load Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                    Dialogs.Error("The selected save file is missing or corrupted.", "Load Error");
 
                     return;
                 }
@@ -362,21 +353,18 @@ namespace AgentSim.Wpf.ViewModels
                 RefreshLiveStats();
                 _rulesEditor?.RefreshTargetsCommand.Execute(null);
 
-                MessageBox.Show(
-                    warning == null
-                        ? "Simulation loaded successfully."
-                        : "Simulation loaded, with warnings:\n\n" + warning,
-                    "Load Simulation",
-                    MessageBoxButton.OK,
-                    warning == null ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (warning == null)
+                {
+                    Dialogs.Success("Simulation loaded successfully.", "Load Simulation");
+                }
+                else
+                {
+                    Dialogs.Warning("Simulation loaded, with warnings:\n\n" + warning, "Load Simulation");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Could not load the simulation.\n\n{ex.Message}",
-                    "Load Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                Dialogs.Error($"Could not load the simulation.\n\n{ex.Message}", "Load Error");
             }
         }
     }

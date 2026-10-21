@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using AgentSim.Core.Agents;
 using AgentSim.Core.Scripting;
 using AgentSim.Core.Simulation;
@@ -14,10 +16,12 @@ namespace AgentSim.Core.Analysis
     // the proof the engine works as a standalone, reusable library.
     public static class MonteCarloRunner
     {
-        public static MonteCarloSummary Run(MonteCarloSettings settings, IAgentBehavior? behaviorOverride = null)
+        public static MonteCarloSummary Run(MonteCarloSettings settings, IAgentBehavior? behaviorOverride = null,
+            IProgress<int>? progress = null, CancellationToken cancellation = default)
         {
             var random = new Random(settings.BaseSeed ?? Environment.TickCount);
-            var trials = new List<TrialResult>();
+            var trialResults = new TrialResult[Math.Max(0, settings.TrialCount)];
+            int finished = 0;
             var baseSettings = settings.BaseSettings;
 
             // Compile each assigned script once up front. The compiled
@@ -41,9 +45,23 @@ namespace AgentSim.Core.Analysis
             int basePrimary = Math.Max(0, baseSettings.AgentCount - baseSecondary);
             bool hasSecondary = baseSecondary > 0;
 
-            for (int i = 0; i < settings.TrialCount; i++)
+            // Seeds are drawn up front, in order, so results are identical
+            // to the old sequential version even though trials now run in parallel.
+            var seeds = new int[trialResults.Length];
+            for (int i = 0; i < seeds.Length; i++)
             {
-                int seed = settings.BaseSeed.HasValue ? settings.BaseSeed.Value + i : random.Next();
+                seeds[i] = settings.BaseSeed.HasValue ? settings.BaseSeed.Value + i : random.Next();
+            }
+
+            var options = new ParallelOptions
+            {
+                CancellationToken = cancellation,
+                MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount - 1)
+            };
+
+            Parallel.For(0, trialResults.Length, options, i =>
+            {
+                int seed = seeds[i];
 
                 // A separate generator for the start-count variation, derived
                 // from the trial seed. It must not share the engine's random
@@ -88,7 +106,7 @@ namespace AgentSim.Core.Analysis
                     ? alive.Count(a => a.Species == baseSettings.SecondaryGroupSpecies)
                     : 0;
 
-                trials.Add(new TrialResult
+                trialResults[i] = new TrialResult
                 {
                     TrialIndex = i,
                     Seed = seed,
@@ -100,8 +118,12 @@ namespace AgentSim.Core.Analysis
                     FinalPrimaryCount = finalPrimary,
                     FinalSecondaryCount = finalSecondary,
                     FinalMeanPatchValue = MeanPatchValue(engine)
-                });
-            }
+                };
+
+                progress?.Report(Interlocked.Increment(ref finished));
+            });
+
+            var trials = trialResults.ToList();
 
             var finalCounts = trials.Select(t => (double)t.FinalAgentCount).ToList();
             var startCounts = trials.Select(t => (double)t.StartAgentCount).ToList();

@@ -63,83 +63,37 @@ namespace AgentSim.Wpf.Views
                 : SpeciesColors.DefaultBrush;
         }
 
-        // Draws a single agent
-        private void DrawAgent(Agent agent, double scale, double offsetX, double offsetY, double diameter, bool headingMark)
+        // Patch colours are quantised to 64 steps and cached as frozen brushes,
+        // so a 50x50 grid no longer allocates 2500 brushes every tick.
+        private static readonly Brush[] PatchBrushes = BuildPatchBrushes();
+
+        private static Brush[] BuildPatchBrushes()
         {
-            if (agent == null || !agent.IsActive) return;
-
-            var ellipse = new Ellipse
+            var brushes = new Brush[64];
+            for (int i = 0; i < brushes.Length; i++)
             {
-                Width = diameter,
-                Height = diameter,
-                Fill = FillFor(agent),
-                Stroke = AgentOutline,
-                StrokeThickness = 1
-            };
-
-            double cx = offsetX + agent.X * scale;
-            double cy = offsetY + agent.Y * scale;
-
-            Canvas.SetLeft(ellipse, cx - diameter / 2);
-            Canvas.SetTop(ellipse, cy - diameter / 2);
-            WorldCanvas.Children.Add(ellipse);
-
-            if (headingMark)
-            {
-                // Heading 0 = up, increasing clockwise.
-                double radians = agent.Heading * Math.PI / 180.0;
-                double reach = diameter * 0.5 + 3;
-
-                WorldCanvas.Children.Add(new Line
-                {
-                    X1 = cx,
-                    Y1 = cy,
-                    X2 = cx + Math.Sin(radians) * reach,
-                    Y2 = cy - Math.Cos(radians) * reach,
-                    Stroke = HeadingBrush,
-                    StrokeThickness = 1.5,
-                    StrokeEndLineCap = PenLineCap.Round
-                });
-            }
-        }
-
-        // Draws the patch grid as colored background cells, dark earth
-        // (empty) to rich green (full) based on each patch's Value. Drawn
-        // BEFORE agents so agents stay visible on top.
-        private void DrawPatches(World world, double scale, double offsetX, double offsetY)
-        {
-            if (world.Patches == null) return;
-
-            double cellWidth = (world.Width / world.Patches.GetLength(0)) * scale;
-            double cellHeight = (world.Height / world.Patches.GetLength(1)) * scale;
-
-            foreach (var patch in world.Patches)
-            {
-                // Scale against the world's configured full value instead of a
-                // fixed 100, so custom starting values color correctly.
-                double max = world.PatchMaxValue;
-                double t = max > 0 ? Math.Clamp(patch.Value / max, 0.0, 1.0) : 0.0;
-
-                // Interpolate dark earth (empty) -> deep green (full)
+                double t = i / 63.0;
                 byte r = (byte)(36 + (26 - 36) * t);
                 byte g = (byte)(27 + (112 - 27) * t);
                 byte b = (byte)(22 + (62 - 22) * t);
-
-                var rect = new Rectangle
-                {
-                    // +0.5 closes the hairline gaps between neighbouring cells.
-                    Width = cellWidth + 0.5,
-                    Height = cellHeight + 0.5,
-                    Fill = new SolidColorBrush(Color.FromRgb(r, g, b))
-                };
-
-                Canvas.SetLeft(rect, offsetX + patch.X * scale);
-                Canvas.SetTop(rect, offsetY + patch.Y * scale);
-                WorldCanvas.Children.Add(rect);
+                brushes[i] = Freeze(new SolidColorBrush(Color.FromRgb(r, g, b)));
             }
+            return brushes;
         }
 
-        // Draws all agents currently in the world
+        private static readonly Pen AgentPen = MakePen(AgentOutline, 1);
+        private static readonly Pen HeadingPen = MakePen(HeadingBrush, 1.5);
+
+        private static Pen MakePen(Brush brush, double thickness)
+        {
+            var pen = new Pen(brush, thickness) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
+            pen.Freeze();
+            return pen;
+        }
+
+        // Draws the whole world into ONE DrawingGroup shown by ONE Image.
+        // WPF now keeps a single element instead of thousands of Rectangle /
+        // Ellipse / Line objects, which is what made large runs lag.
         public void DrawWorld(World world)
         {
             _lastWorld = world;
@@ -152,34 +106,72 @@ namespace AgentSim.Wpf.Views
 
             EmptyHint.Visibility = Visibility.Collapsed;
 
-            // Keep the world's proportions: one scale for both axes, centred,
-            // instead of stretching a square world into a wide rectangle.
             double scale = Math.Min(WorldCanvas.ActualWidth / world.Width, WorldCanvas.ActualHeight / world.Height);
             double offsetX = (WorldCanvas.ActualWidth - world.Width * scale) / 2;
             double offsetY = (WorldCanvas.ActualHeight - world.Height * scale) / 2;
 
-            DrawPatches(world, scale, offsetX, offsetY);
-
-            // Frame around the playable area, drawn over the patches.
-            var frame = new Rectangle
+            var group = new DrawingGroup();
+            using (DrawingContext dc = group.Open())
             {
-                Width = world.Width * scale,
-                Height = world.Height * scale,
-                Stroke = WorldFrameBrush,
-                StrokeThickness = 1,
-                Fill = Brushes.Transparent
-            };
-            Canvas.SetLeft(frame, offsetX);
-            Canvas.SetTop(frame, offsetY);
-            WorldCanvas.Children.Add(frame);
+                // Transparent full-canvas rect so the image bounds match the canvas.
+                dc.DrawRectangle(Brushes.Transparent, null,
+                    new Rect(0, 0, WorldCanvas.ActualWidth, WorldCanvas.ActualHeight));
 
-            double diameter = Math.Clamp(scale * 4.5, 7, 13);
-            bool headingMarks = world.Agents.Count <= MaxAgentsForHeadingMarks;
+                if (world.Patches != null)
+                {
+                    double cellWidth = (world.Width / world.Patches.GetLength(0)) * scale;
+                    double cellHeight = (world.Height / world.Patches.GetLength(1)) * scale;
+                    double max = world.PatchMaxValue;
 
-            foreach (Agent agent in world.Agents)
-            {
-                DrawAgent(agent, scale, offsetX, offsetY, diameter, headingMarks);
+                    foreach (var patch in world.Patches)
+                    {
+                        double t = max > 0 ? Math.Clamp(patch.Value / max, 0.0, 1.0) : 0.0;
+                        var brush = PatchBrushes[(int)(t * 63 + 0.5)];
+                        dc.DrawRectangle(brush, null,
+                            new Rect(offsetX + patch.X * scale, offsetY + patch.Y * scale,
+                                     cellWidth + 0.5, cellHeight + 0.5));
+                    }
+                }
+
+                dc.DrawRectangle(Brushes.Transparent, new Pen(WorldFrameBrush, 1),
+                    new Rect(offsetX, offsetY, world.Width * scale, world.Height * scale));
+
+                double diameter = Math.Clamp(scale * 4.5, 7, 13);
+                double radius = diameter / 2;
+                bool headingMarks = world.Agents.Count <= MaxAgentsForHeadingMarks;
+
+                foreach (Agent agent in world.Agents)
+                {
+                    if (agent == null || !agent.IsActive) continue;
+
+                    double cx = offsetX + agent.X * scale;
+                    double cy = offsetY + agent.Y * scale;
+                    dc.DrawEllipse(FillFor(agent), AgentPen, new Point(cx, cy), radius, radius);
+
+                    if (headingMarks)
+                    {
+                        double radians = agent.Heading * Math.PI / 180.0;
+                        double reach = radius + 3;
+                        dc.DrawLine(HeadingPen, new Point(cx, cy),
+                            new Point(cx + Math.Sin(radians) * reach, cy - Math.Cos(radians) * reach));
+                    }
+                }
             }
+
+            // Fix the drawing's bounds to the canvas. Without this, agents near
+            // the edge stick out past it, the bounds change every tick, and
+            // the Image re-aligns itself, which made the world jump up and down.
+            group.ClipGeometry = new RectangleGeometry(
+                new Rect(0, 0, WorldCanvas.ActualWidth, WorldCanvas.ActualHeight));
+
+            var image = new Image
+            {
+                Source = new DrawingImage(group),
+                Width = WorldCanvas.ActualWidth,
+                Height = WorldCanvas.ActualHeight,
+                Stretch = Stretch.Fill
+            };
+            WorldCanvas.Children.Add(image);
         }
     }
 }

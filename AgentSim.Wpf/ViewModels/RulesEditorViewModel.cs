@@ -42,6 +42,10 @@ namespace AgentSim.Wpf.ViewModels
             set { _targetSpecies = value; OnPropertyChanged(); }
         }
 
+        // Supplies the species names currently typed in the UI, so Refresh
+        // doesn't have to wait for Setup to copy them into the engine settings.
+        public System.Func<(string Primary, string Secondary, int SecondaryCount)>? SpeciesSource { get; set; }
+
         public ICommand ApplyCommand { get; }
         public ICommand RefreshTargetsCommand { get; }
 
@@ -62,14 +66,21 @@ namespace AgentSim.Wpf.ViewModels
         {
             var selected = TargetSpecies;
 
+            var (primary, secondary, secondaryCount) = SpeciesSource?.Invoke()
+                ?? (_engine.Settings.PrimaryGroupSpecies,
+                    _engine.Settings.SecondaryGroupSpecies,
+                    _engine.Settings.SecondaryGroupCount);
+
+            void AddIfNew(string? name)
+            {
+                if (!string.IsNullOrWhiteSpace(name) && !AvailableTargets.Contains(name))
+                    AvailableTargets.Add(name);
+            }
+
             AvailableTargets.Clear();
             AvailableTargets.Add("All");
-            AvailableTargets.Add(_engine.Settings.PrimaryGroupSpecies);
-
-            if (_engine.Settings.SecondaryGroupCount > 0)
-            {
-                AvailableTargets.Add(_engine.Settings.SecondaryGroupSpecies);
-            }
+            AddIfNew(primary);
+            if (secondaryCount > 0) AddIfNew(secondary);
 
             // Keep the previous selection if it's still valid, otherwise
             // fall back to "All" rather than an orphaned value.
