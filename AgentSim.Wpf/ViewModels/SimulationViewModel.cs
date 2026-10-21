@@ -151,6 +151,8 @@ namespace AgentSim.Wpf.ViewModels
         public void SetRulesEditor(RulesEditorViewModel rulesEditor)
         {
             _rulesEditor = rulesEditor;
+            _rulesEditor.SpeciesSource = () => (PrimaryGroupSpecies, SecondaryGroupSpecies, SecondaryGroupCount);
+            _rulesEditor.RefreshTargetsCommand.Execute(null);
         }
 
         public SimulationViewModel()
