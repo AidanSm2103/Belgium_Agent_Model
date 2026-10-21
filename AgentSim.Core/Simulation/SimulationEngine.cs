@@ -80,10 +80,7 @@ namespace AgentSim.Core.Simulation
                 agent.Step(Worlds, _rng, this);
             }
 
-            foreach (var agent in _pendingKills)
-            {
-                Worlds.RemoveAgent(agent);
-            }
+            Worlds.RemoveAgents(_pendingKills);
             _pendingKills.Clear();
 
             foreach (var agent in _pendingSpawns)
