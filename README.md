@@ -1,140 +1,152 @@
 <div align="center">
 
+<img src="https://img.shields.io/badge/BAM-Belgium%20Agent%20Model-FDDA24?style=for-the-badge&labelColor=0C0F14" alt="BAM"/>
+
 # Belgium Agent Model (BAM)
 
-**C#/WPF agent-based modelling application inspired by NetLogo**
+**A C# / WPF agent-based modelling studio inspired by NetLogo**
+*Write agent behaviour at runtime, watch species interact, and test it statistically.*
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
 ![WPF](https://img.shields.io/badge/UI-WPF-0078D7?logo=windows&logoColor=white)
-![Roslyn Scripting](https://img.shields.io/badge/Scripting-Roslyn-68217A?logo=csharp&logoColor=white)
+![Roslyn](https://img.shields.io/badge/Scripting-Roslyn-68217A?logo=csharp&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-xUnit-25A162)
 ![Status](https://img.shields.io/badge/status-Final%20Release-brightgreen)
 
-*Year-long university group project. A general-purpose agent-based modelling tool where users can define their own agent behavior at runtime, run statistical batch analysis, and observe multiple interacting agent types, built as a reusable C# library with a WPF front end.*
+[Features](#-features) · [Quick start](#-quick-start) · [Using the app](#-using-the-app) · [Example scripts](#-example-scripts) · [Architecture](#-architecture) · [Library](#-using-agentsimcore-as-a-library) · [Team](#-team)
 
 </div>
 
 ---
 
-## 📍 Current status: 
+> Year-long university group project (Belgium Campus ITversity, Module: PRJ381). A general-purpose agent-based modelling tool where users define their own agent behaviour at runtime, run statistical batch analysis and observe multiple interacting agent types. Built as a **reusable C# library** with a **WPF front end**.
 
-Development is feature-complete. Remaining work going forward is limited to bug fixes and polish rather than new functionality.
+## 📍 Status
+
+Development is **feature-complete**. 
 
 | Area | Status |
 |---|:---:|
 | Core simulation loop (Setup / Step / Go) | ✅ |
-| Torus-wrapped world | ✅ |
+| Torus-wrapped world (agents leaving one edge appear on the opposite one) | ✅ |
 | Real-time rendering | ✅ |
-| Runtime C# scripting (Roslyn) | ✅ |
-| Script safety checks + execution timeout | ✅ |
-| In-app rules editor, with an expandable full-size view | ✅ |
-| Configurable patch grid (size, starting value, regrowth) — readable/writable, rendered live on the canvas | ✅ |
-| Live plot + monitors (ticks, agent count, species breakdown, patch health) | ✅ |
-| Agent rendering reflects species and active behavior | ✅ |
-| Safe runtime spawn/kill of agents from scripts | ✅ |
-| Multi-species agent support, with per-species script targeting | ✅ |
-| Monte Carlo batch simulation with statistical summaries + CSV export | ✅ |
-| Monte Carlo start-count variance and per-species statistics | ✅ |
-| Monte Carlo charts (final population, distribution, start vs final, per-species comparison) | ✅ |
-| Themed, polished interface (Belgian tricolour dark theme) | ✅ |
-| Save / load simulation configuration and scripts | ✅ |
-| Reusable library packaging + standalone console demo | ✅ |
+| Runtime C# scripting (Roslyn) with safety checks and a per-agent time limit | ✅ |
+| In-app rules editor with an expandable full-size view | ✅ |
+| Configurable patch grid (size, starting value, regrowth), readable and writable from scripts | ✅ |
+| Live plot and monitors (ticks, agent count, species breakdown, patch health) | ✅ |
+| Safe runtime spawn / kill of agents from scripts | ✅ |
+| Multi-species agents with per-species script targeting | ✅ |
+| Monte Carlo batch runs: statistics, start-count variance, per-species results, charts, CSV export | ✅ |
+| Themed interface (Belgian tricolour dark theme), including themed pop-up messages | ✅ |
+| Save / load of the full simulation | ✅ |
+| Performance pass (fast script execution, parallel Monte Carlo, single-layer world drawing) | ✅ |
+| Reusable library packaging and standalone console demo | ✅ |
 
-### Feature overview
+## ✨ Features
 
-- **Write and apply agent behavior without recompiling.** The rules editor compiles a C# snippet via Roslyn and applies it live, with clear compile-error feedback if it doesn't build. An expand button opens the editor in a larger floating overlay for more comfortable editing, without disturbing the rest of the layout.
-- **Scripts run safely.** A lightweight denylist blocks obviously unsafe operations (file/network/process access), and any script that hangs is timed out rather than freezing the simulation. Agents can safely spawn or remove other agents from within a script.
-- **Multiple interacting agent types.** Agents can be split into two named species groups at setup, and a script can be applied to a single species rather than always affecting everyone — enabling predator/prey-style and other multi-agent interaction scenarios.
-- **A real, visible environment.** The world has a patch grid agents and scripts can read from and write to, rendered live as a colored grid behind the agents. Grid size, starting value, and regrowth time are all configurable: an emptied patch (value 0) can regrow to its full value after a set number of ticks, or never if regrowth is turned off.
-- **Statistical analysis.** A Monte Carlo panel runs the simulation many times over with varying random seeds, using the same settings and the same scripts you have applied to the simulation on screen. A **start count variance** setting (a percentage) makes each trial begin with a slightly different number of agents (for example 10% of 30 gives 27 to 33), varied per species group and reproducible from the seed. It reports the mean, median, standard deviation, standard error, 95% confidence interval and min/max of the final living agent count across trials, plus per-species totals, survival rate, mean final patch value, and the correlation between starting and final population.
-- **Monte Carlo charts and CSV export.** After a run, a **Monte Carlo Charts** tab shows four charts: final population per trial (stacked by species), a histogram of final populations, starting versus final population per trial, and mean start versus mean final per species with 95% confidence intervals. CSV export writes two files: one row per trial (start and final counts in total and per species, net change, survival rate, final mean patch value), and a `_summary.csv` beside it with the statistics. Numbers always use a `.` decimal point, so the files open correctly in any regional setting.
-- **Save and resume.** A save file captures the whole simulation: settings, species groups, every agent's position and behavior, patch values, the tick count, and the scripts you applied. Loading puts you back where you left off with the scripts still active. Files saved by earlier versions (settings only) still load, and start a fresh Setup.
-- **Live feedback.** A plot tracks population over time, one line per species, alongside a live stat strip (ticks, agents alive, count by species, patch health), updating every tick.
-- **A finished look.** A dark theme built on the Belgian tricolour (black, yellow and red), with a status header, card-based side panel, and species colours shared between the world, the live plot, and the Monte Carlo charts.
-- **Genuinely reusable.** `AgentSim.Core` has zero UI dependencies and ships with a standalone console demo proving it runs headlessly end to end — simulation, scripting, and Monte Carlo included.
+### 🧠 Scripting
+- **Write behaviour without recompiling.** The rules editor compiles a C# snippet with Roslyn and applies it live, with clear compile-error feedback. 
+- **Safe by design.** A denylist blocks file, network and process access, a first-run test catches broken or hanging scripts before they touch real agents and an agent whose script runs far too long is switched off rather than freezing the simulation.
+- **Scripts can change the world.** Read and write patch values, look at other agents and spawn or remove agents through `Engine.QueueSpawn` and `Engine.QueueKill`.
+
+### 🐑🐺 Multiple species
+Split agents into two named species groups at setup, then apply a script to *All* agents or to a single species. The **Apply to** list shows the species names you currently have set and the refresh button next to it updates the list.
+
+### 🌱 A real environment
+A patch grid agents and scripts can read and write, drawn live behind the agents. Grid size, starting value and regrowth time are configurable. An emptied patch can regrow after a set number of ticks or never.
+
+### 📊 Statistics
+- A **Monte Carlo** panel runs many independent trials with different seeds, using the same settings and scripts as the simulation on screen. Trials run **in parallel** across your CPU cores, and each trial's seed is still derived from the base seed, so results are reproducible.
+- **Start-count variance** makes each trial begin with a slightly different population (for example 10% of 30 gives 27 to 33), varied per species and reproducible from the seed.
+- Reports mean, median, standard deviation, standard error, 95% confidence interval and min/max of the final population, plus per-species totals, survival rate, mean final patch value and the start-versus-final correlation.
+- A **Monte Carlo Charts** tab: final population per trial, histogram of final populations, start versus final per trial and mean start versus mean final per species with 95% confidence intervals.
+- **CSV export** writes one row per trial plus a `_summary.csv` of the statistics beside it. 
+
+### 💾 Save and resume
+A save file captures the whole simulation: settings, species groups, every agent's position and behaviour, patch values, the tick count and the scripts you applied. Loading puts you back where you left off with the scripts still active. Older settings-only files still load and start a fresh Setup.
+
+### 🎨 Finished look
+A dark theme built on the Belgian tricolour, with a status header, card-based side panel and shared species colours across the world, the live plot and the Monte Carlo charts. Save and load messages, errors and warnings use themed pop-ups instead of the standard Windows message box.
+
+### ⚡ Performance
+Built to stay smooth with large populations:
+- Scripts are compiled once into a delegate and run directly on every tick. The thread-plus-timeout guard is used only for a script's first test run.
+- The world is drawn into a single image per tick rather than thousands of separate shapes.
+- Roslyn is warmed up in the background at startup, so the first **Apply** is not the slow one.
+- Monte Carlo trials run in parallel.
+
+### 📦 Genuinely reusable
+`AgentSim.Core` has zero UI dependencies and ships with a standalone console demo that runs the simulation, scripting and Monte Carlo end to end with no UI.
+
+## 🚀 Quick start
+
+1. Open `AgentSim.Core.sln` in **Visual Studio 2022 or later** (the *.NET desktop development* workload is required).
+2. Set `AgentSim.Wpf` as the **Startup Project**.
+3. Press **F5**.
+
+## 🕹️ Using the app
+
+1. Click **Setup** to spawn agents. Optionally configure a second species group first (species names and secondary count under **Population**) and the patch grid (size, starting value, regrowth under **Environment**). Both are applied on Setup.
+2. In the rules editor, write a script using `Agent`, `World`, `Rng` and `Engine`. Use the expand button for a larger view.
+3. Choose who the script applies to under **Apply to** (*All* or a species), then click **Apply behavior**.
+4. Click **Go** to run continuously or **Step** to advance one tick. Ticks, agent count, species breakdown, patch health and the live plot update as it runs.
+5. Use **Save** / **Load** to store or restore the whole simulation.
+6. Open the **Monte Carlo** panel, set the trial count, ticks per trial and start-count variance, then run. Statistics appear in the panel, charts open in the **Monte Carlo Charts** tab, and **CSV** exports the data.
+
+**Script notes**
+- A script is limited to 2000 characters.
+- Always move agents with `World.Wrap(...)` so they stay in the world.
+- Distance checks in a script do not account for the world wrapping at the edges, so two agents on opposite edges count as far apart.
+- Neighbour scans over `World.Agents` cost more as the population grows. Around a few hundred agents per species stays smooth.
 
 ## 🏗️ Architecture
 
-Four projects keep the simulation engine reusable and independent of any specific UI:
+Four projects keep the simulation engine reusable and independent of any UI:
 
 ```
-AgentSim.Core/              Simulation engine — no UI dependencies
+AgentSim.Core/              Simulation engine, no UI dependencies
 ├── Agents/                   Agent, IAgentBehavior, RandomWalkBehavior
 ├── World/                    World, Patch
-├── Simulation/                SimulationEngine, SimulationSettings
-├── Scripting/                 BehaviorCompiler, ScriptedBehavior, ScriptGlobals,
-│                              ScriptSafetyChecker, ScriptApplier, ScriptApplyResult,
-│                              ScriptTemplates, BehaviorTestRunner
-├── Analysis/                  MonteCarloSettings, MonteCarloResult, MonteCarloRunner,
-│                              StatisticsHelper, ResultsExporter
-├── Persistence/                SimulationSaveData, SimulationSnapshot, SimulationPersistence
-└── Utilities/                  RandomProvider (seeded RNG)
+├── Simulation/               SimulationEngine, SimulationSettings
+├── Scripting/                BehaviourCompiler, ScriptedBehaviour, ScriptGlobals,
+│                             ScriptSafetyChecker, ScriptApplier, ScriptApplyResult,
+│                             ScriptTemplates, BehaviourTestRunner
+├── Analysis/                 MonteCarloSettings, MonteCarloResult, MonteCarloRunner,
+│                             StatisticsHelper, ResultsExporter
+├── Persistence/              SimulationSaveData, SimulationSnapshot, SimulationPersistence
+└── Utilities/                RandomProvider (seeded RNG)
 
-AgentSim.Wpf/                WPF front end (MVVM)
-├── Themes/                    Theme.xaml (colours, control styles)
-├── Views/                     MainWindow, WorldCanvasControl, RulesEditorControl,
-│                              PlotControl, MonteCarloControl,
-│                              MonteCarloChartsControl, ChartDrawing, SpeciesColors
-├── ViewModels/                 MainViewModel, SimulationViewModel,
-│                              RulesEditorViewModel, MonteCarloViewModel
-└── Helpers/                    RelayCommand, ViewModelBase
+AgentSim.Wpf/               WPF front end (MVVM)
+├── Themes/                   Theme.xaml (colours, control styles)
+├── Views/                    MainWindow, WorldCanvasControl, RulesEditorControl,
+│                             PlotControl, MonteCarloControl, MonteCarloChartsControl,
+│                             ChartDrawing, SpeciesColors, NonTopmostPopup,
+│                             Dialogs, ThemedMessageWindow
+├── ViewModels/               MainViewModel, SimulationViewModel,
+│                             RulesEditorViewModel, MonteCarloViewModel
+└── Helpers/                  RelayCommand, ViewModelBase
 
-AgentSim.Core.Tests/          xUnit tests covering the engine, scripting, Monte Carlo,
-                              multi-species support, and persistence
+AgentSim.Core.Tests/        xUnit tests: engine, scripting, Monte Carlo,
+                            multi-species support and persistence
 
-AgentSim.ConsoleDemo/         Standalone console app — proves AgentSim.Core runs with
-                              zero UI involvement
+AgentSim.ConsoleDemo/       Standalone console app proving AgentSim.Core runs
+                            with zero UI involvement
 ```
 
-`AgentSim.Core` has no reference to WPF or any UI framework — it can be driven headlessly, which is what makes it a reusable library rather than logic baked into the UI. `AgentSim.ConsoleDemo` exists specifically to prove that end to end.
+`AgentSim.Core` has no reference to WPF or any UI framework. It can be driven headlessly, which is what makes it a reusable library rather than logic baked into the UI.
 
-**A note on script safety:** the safety checks (denylist + timeout) are a practical safeguard against accidental slow or unsafe scripts, not a hard security sandbox — genuine isolation from deliberately malicious code would need a separate process, which is out of scope for this project.
-
-## ▶️ Running the project
-
-1. Open `AgentSim.Core.sln` in Visual Studio 2022+ (requires the **.NET desktop development** workload)
-2. Set `AgentSim.Wpf` as the Startup Project
-3. Press F5
-
-## ✍️ Using the app
-
-1. Click **Setup** to spawn agents. Optionally configure a second species group first (primary/secondary species names and secondary group count) under **Population**, and the patch grid (size, starting value, regrowth time) under **Environment**. Both are applied on Setup.
-2. In the rules editor, write a script using `Agent`, `World`, `Rng`, and `Engine` (for safe spawn/kill). Use the expand button to open a larger editing view if needed.
-3. Choose who the script applies to under **Apply to** — `All`, or a specific species group — then click **Apply Behavior**.
-4. Click **Go** to run continuously, or **Step** to advance one tick at a time. Ticks, agent count, species breakdown, patch health, and a live plot update as it runs.
-5. Use **Save**/**Load** to store or restore the current settings, species groups, and script.
-6. Open the **Monte Carlo** panel, set the trial count, ticks per trial and start count variance, then run many independent trials. The statistics appear in the panel and the charts open in the **Monte Carlo Charts** tab; use **CSV** to export the per-trial data and a summary file.
+> **A note on script safety:** the safety checks (denylist, first-run test and time limit) are a practical safeguard against accidental slow or unsafe scripts, not a hard security sandbox. Real isolation from deliberately malicious code would need a separate process, which is out of scope for this project.
 
 ## 🧪 Running the tests
 
-Open **Test Explorer** (Test menu → Test Explorer) and run all tests, or `Test → Run All Tests`. Coverage includes the simulation engine, world, agents, random number provider, the full scripting pipeline (compile, safety checks, timeout handling, apply), Monte Carlo statistics, start-count variance, CSV export and determinism, multi-species behavior targeting, patch configuration and regrowth, and save/load persistence.
+Open **Test Explorer** (Test menu → Test Explorer) and choose **Run All Tests**. Coverage includes the engine, world, agents, random number provider, the scripting pipeline (compile, safety checks, timeout handling, apply), Monte Carlo statistics, start-count variance, CSV export and determinism, multi-species targeting, patch configuration and regrowth, and save/load persistence.
 
 ## 📦 Using AgentSim.Core as a library
 
-`AgentSim.Core` has zero dependencies on WPF or any UI framework, so it can be driven entirely headlessly — from a console app, a test suite, or any other .NET front end.
+`AgentSim.Core` has no WPF dependency, so it can be driven from a console app, a test suite or any other .NET front end.
 
-```csharp
-using AgentSim.Core.Simulation;
-
-var settings = new SimulationSettings { AgentCount = 30, WorldWidth = 100, WorldHeight = 100, Seed = 42 };
-var engine = new SimulationEngine(settings);
-engine.Setup();
-
-for (int i = 0; i < 100; i++)
-    engine.Tick();
-
-Console.WriteLine($"Final agent count: {engine.Worlds.Agents.Count}");
-```
-
-See `AgentSim.ConsoleDemo/Program.cs` for a full working example covering headless simulation, Roslyn scripting, and Monte Carlo batch runs with statistical summaries — all with zero UI involvement.
-
-### Running the console demo
-
-```powershell
-dotnet run --project AgentSim.ConsoleDemo
-```
+> See `AgentSim.ConsoleDemo/Program.cs` for a full example covering a headless simulation, Roslyn scripting and Monte Carlo batch runs with statistical summaries.
 
 ## 👥 Team
 
-Built by a 7-person team split across simulation engine, rendering, UI/control panel, scripting, and QA/DevOps.
-
+Built by a 6-person team covering the simulation engine, rendering, UI and control panel, scripting, Monte Carlo analysis and QA/DevOps.
