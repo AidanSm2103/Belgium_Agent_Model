@@ -13,7 +13,7 @@
 ![Tests](https://img.shields.io/badge/tests-xUnit-25A162)
 ![Status](https://img.shields.io/badge/status-Final%20Release-brightgreen)
 
-[Features](#-features) · [Quick start](#-quick-start) · [Using the app](#-using-the-app) · [Example scripts](#-example-scripts) · [Architecture](#-architecture) · [Library](#-using-agentsimcore-as-a-library) · [Team](#-team)
+[Features](#-features) · [Quick start](#-quick-start) · [Using the app](#-using-the-app) · [Architecture](#-architecture) · [Library](#-using-agentsimcore-as-a-library) · [Team](#-team)
 
 </div>
 
