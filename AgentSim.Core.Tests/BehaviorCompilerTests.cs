@@ -92,6 +92,7 @@ namespace AgentSim.Core.Tests.Scripting
             var engine = CreateScratchEngine();
 
             // Act
+            ((ScriptedBehavior)result.Behavior!).UseTimeoutGuard = true;
             result.Behavior!.Execute(agent, world, rng, engine);
 
             // Assert
